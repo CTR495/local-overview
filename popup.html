@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Local Overview</title>
+    <link rel="stylesheet" href="./pages.css" />
+  </head>
+  <body class="popup">
+    <main class="popup-shell">
+      <header class="brand-row">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path
+              d="M17 3c1.1 8.3 3.7 10.9 12 12-8.3 1.1-10.9 3.7-12 12-1.1-8.3-3.7-10.9-12-12C13.3 13.9 15.9 11.3 17 3Z"
+            />
+            <path d="m6 2 1.1 3.9L11 7 7.1 8.1 6 12 4.9 8.1 1 7l3.9-1.1Z" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Local Overview</h1>
+          <span class="eyebrow" id="version">YOUR SEARCH, YOUR MODEL</span>
+        </div>
+        <label class="switch compact" title="Enable Local Overview"
+          ><input id="enabled" type="checkbox" aria-label="Enable Local Overview" /><span></span
+        ></label>
+      </header>
+
+      <section class="connection-card" aria-label="Ollama connection">
+        <div class="status-line">
+          <span class="status-dot" id="status-dot"></span
+          ><strong id="connection-title">Checking Ollama…</strong
+          ><button
+            class="icon-button"
+            id="refresh"
+            title="Retry connection"
+            aria-label="Retry connection"
+          >
+            ↻
+          </button>
+        </div>
+        <p id="connection-detail" class="muted small" aria-live="polite">
+          Connecting to your local instance.
+        </p>
+        <label class="field-label" for="model">LOCAL MODEL</label>
+        <select id="model" aria-describedby="connection-detail">
+          <option value="">Finding installed models…</option>
+        </select>
+      </section>
+
+      <section class="popup-mode" aria-label="Overview mode">
+        <div class="section-label">
+          <h2>Search overview</h2>
+          <span class="tiny muted">GOOGLE SEARCH</span>
+        </div>
+        <div class="segmented" role="group" aria-label="Overview mode">
+          <button id="mode-google" type="button" aria-pressed="true">Google</button
+          ><button id="mode-local" type="button" aria-pressed="false">
+            <span aria-hidden="true">✦</span> Local AI
+          </button>
+        </div>
+        <p class="muted small" id="mode-detail">Google’s original overview, when available.</p>
+      </section>
+
+      <div class="privacy-note">
+        <span aria-hidden="true">⌂</span>
+        <p>
+          AI runs on your computer.<br /><span class="muted"
+            >No account. No paid API. No tracking.</span
+          >
+        </p>
+      </div>
+      <p class="save-status small" id="save-status" role="status"></p>
+      <button class="button secondary full" id="settings" type="button">
+        Open settings <span aria-hidden="true">↗</span>
+      </button>
+      <footer class="popup-footer">Independent &amp; unofficial</footer>
+    </main>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Local Overview · Settings</title>
+    <link rel="stylesheet" href="./pages.css" />
+  </head>
+  <body class="options">
+    <div class="settings-shell">
+      <aside class="sidebar">
+        <a class="brand-row brand-link" href="#top"
+          ><div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <path
+                d="M17 3c1.1 8.3 3.7 10.9 12 12-8.3 1.1-10.9 3.7-12 12-1.1-8.3-3.7-10.9-12-12C13.3 13.9 15.9 11.3 17 3Z"
+              />
+              <path d="m6 2 1.1 3.9L11 7 7.1 8.1 6 12 4.9 8.1 1 7l3.9-1.1Z" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <strong>Local Overview</strong><span class="eyebrow" id="version">SETTINGS</span>
+          </div></a
+        >
+        <nav aria-label="Settings sections">
+          <a href="#ai"><span aria-hidden="true">✦</span> AI &amp; connection</a
+          ><a href="#appearance"><span aria-hidden="true">◐</span> Appearance</a
+          ><a href="#behavior"><span aria-hidden="true">⌘</span> Behavior</a
+          ><a href="#privacy"><span aria-hidden="true">⌂</span> Privacy &amp; setup</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <span class="local-badge"
+            ><span class="status-dot online"></span> BUILT FOR LOCAL AI</span
+          >
+          <p>Your models.<br />Your computer.<br />Your overview.</p>
+        </div>
+      </aside>
+      <main id="top" class="settings-main">
+        <header class="page-heading">
+          <div>
+            <span class="eyebrow accent">MAKE IT YOURS</span>
+            <h1>A little more local.</h1>
+            <p class="muted">Choose how Local Overview fits into your search.</p>
+          </div>
+          <label class="switch"
+            ><input id="enabled" type="checkbox" aria-label="Enable extension" /><span></span
+            ><b>Enabled</b></label
+          >
+        </header>
+        <div class="save-banner" id="save-status" role="status">
+          Changes save automatically on this device.
+        </div>
+
+        <section class="settings-card" id="ai" aria-labelledby="ai-title">
+          <header class="card-heading">
+            <div class="section-icon" aria-hidden="true">✦</div>
+            <div>
+              <h2 id="ai-title">AI &amp; connection</h2>
+              <p class="muted">A direct connection to Ollama, on your computer.</p>
+            </div>
+          </header>
+          <form id="endpoint-form" class="endpoint-block">
+            <label class="field-label" for="endpoint">OLLAMA ENDPOINT</label>
+            <div class="input-action">
+              <input
+                id="endpoint"
+                type="url"
+                required
+                spellcheck="false"
+                placeholder="http://localhost:11434"
+                aria-describedby="endpoint-help"
+              /><button class="button primary" id="connect" type="submit">Connect</button>
+            </div>
+            <p class="small muted" id="endpoint-help">
+              Only localhost and 127.0.0.1 are accepted. Click Connect to save an endpoint.
+            </p>
+          </form>
+          <div class="connection-strip">
+            <span class="status-dot" id="status-dot"></span>
+            <div>
+              <strong id="connection-title">Checking Ollama…</strong>
+              <p class="small muted" id="connection-detail" aria-live="polite">
+                Looking for installed local models.
+              </p>
+            </div>
+            <button class="button subtle" id="refresh" type="button">Retry</button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="model">Installed model</label>
+              <p class="muted small">Discovered from Ollama. Cloud models are excluded.</p>
+            </div>
+            <select id="model">
+              <option value="">Automatic · first local model</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="autoGenerate">Generate when selecting Local AI</label>
+              <p class="muted small">Start an answer when you switch to Local AI.</p>
+            </div>
+            <label class="switch"><input id="autoGenerate" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="stream">Stream responses</label>
+              <p class="muted small">Show the answer as the model writes it.</p>
+            </div>
+            <label class="switch"><input id="stream" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="grounding">Use visible search results</label>
+              <p class="muted small">
+                Send selected result titles, URLs, and snippets to local Ollama.<br />No extra pages
+                are fetched. Sources may still be incomplete or inaccurate.
+              </p>
+            </div>
+            <label class="switch"><input id="grounding" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="maxResults">Maximum sources</label>
+              <p class="muted small">Collected only when search grounding is enabled.</p>
+            </div>
+            <input class="short-input" id="maxResults" type="number" min="1" max="8" step="1" />
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="responseLength">Response length</label>
+              <p class="muted small">A guide for the model; actual length can vary.</p>
+            </div>
+            <select id="responseLength">
+              <option value="short">Short</option>
+              <option value="balanced">Balanced</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="temperature">Temperature <span class="tag">OPTIONAL</span></label>
+              <p class="muted small">0–2. Leave empty to use the model’s default.</p>
+            </div>
+            <input
+              class="short-input"
+              id="temperature"
+              type="number"
+              min="0"
+              max="2"
+              step="0.1"
+              placeholder="Default"
+            />
+          </div>
+        </section>
+
+        <section class="settings-card" id="appearance" aria-labelledby="appearance-title">
+          <header class="card-heading">
+            <div class="section-icon" aria-hidden="true">◐</div>
+            <div>
+              <h2 id="appearance-title">Appearance</h2>
+              <p class="muted">Quiet details, comfortable reading.</p>
+            </div>
+          </header>
+          <div class="setting-row">
+            <div>
+              <label for="theme">Theme</label>
+              <p class="muted small">Automatic follows the Google page and your system.</p>
+            </div>
+            <select id="theme">
+              <option value="auto">Automatic</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="reducedMotion">Reduce animations</label>
+              <p class="muted small">System reduced-motion preferences are always respected.</p>
+            </div>
+            <label class="switch"><input id="reducedMotion" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="sparkle">Animate the sparkle</label>
+              <p class="muted small">A small sign that your local model is working.</p>
+            </div>
+            <label class="switch"><input id="sparkle" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="showStats">Show generation statistics</label>
+              <p class="muted small">
+                A collapsible panel with timings and tokens reported by Ollama.
+              </p>
+            </div>
+            <label class="switch"><input id="showStats" type="checkbox" /><span></span></label>
+          </div>
+        </section>
+
+        <section class="settings-card" id="behavior" aria-labelledby="behavior-title">
+          <header class="card-heading">
+            <div class="section-icon" aria-hidden="true">⌘</div>
+            <div>
+              <h2 id="behavior-title">Behavior</h2>
+              <p class="muted">You decide when your model gets to work.</p>
+            </div>
+          </header>
+          <div class="setting-row">
+            <div>
+              <label for="mode">Current overview mode</label>
+              <p class="muted small">Updates open Google Search tabs immediately.</p>
+            </div>
+            <select id="mode">
+              <option value="google">Google</option>
+              <option value="local">Local AI</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="preferredMode">Preferred overview mode</label>
+              <p class="muted small">
+                Used for a new page when remembering the previous mode is off.
+              </p>
+            </div>
+            <select id="preferredMode">
+              <option value="google">Google</option>
+              <option value="local">Local AI</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="rememberMode">Remember previous mode</label>
+              <p class="muted small">Keep your last choice across Google searches.</p>
+            </div>
+            <label class="switch"><input id="rememberMode" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="interactionOnly">Generate only after interaction</label>
+              <p class="muted small">
+                Require selecting Local AI, Generate, or Regenerate on each search.
+              </p>
+            </div>
+            <label class="switch"
+              ><input id="interactionOnly" type="checkbox" /><span></span
+            ></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <label for="autoRegenerate">Generate on a new search</label>
+              <p class="muted small">
+                When Local AI is active. Also requires automatic generation<br />and “Generate only
+                after interaction” to be off.
+              </p>
+            </div>
+            <label class="switch"><input id="autoRegenerate" type="checkbox" /><span></span></label>
+          </div>
+        </section>
+
+        <section class="settings-card privacy-card" id="privacy" aria-labelledby="privacy-title">
+          <header class="card-heading">
+            <div class="section-icon" aria-hidden="true">⌂</div>
+            <div>
+              <h2 id="privacy-title">Local by design</h2>
+              <p class="muted">No telemetry, accounts, ads, or remote AI services.</p>
+            </div>
+          </header>
+          <p>
+            Your search query goes to the local Ollama endpoint when you generate an answer. If you
+            enable search grounding, a limited set of publicly visible result titles, links, and
+            snippets goes with it. Answers and queries are not saved by this extension.
+          </p>
+          <p class="muted">
+            Google still receives your searches. Local Overview does not make Google Search private
+            or offline. Local models can make mistakes; verify important answers against the
+            sources.
+          </p>
+          <details class="setup-details">
+            <summary>Connection setup &amp; troubleshooting</summary>
+            <div>
+              <p>
+                Install Ollama from
+                <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer"
+                  >ollama.com</a
+                >, start it, then download a local chat model in your terminal:
+              </p>
+              <code>ollama pull llama3.2:3b</code>
+              <p>
+                If the connection is blocked with HTTP 403, allow this extension’s exact origin
+                using Ollama’s <code>OLLAMA_ORIGINS</code> environment variable, then restart
+                Ollama.
+              </p>
+              <label class="field-label" for="extension-origin">THIS EXTENSION’S ORIGIN</label>
+              <div class="input-action">
+                <input id="extension-origin" readonly spellcheck="false" /><button
+                  class="button secondary"
+                  id="copy-origin"
+                  type="button"
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="small muted">
+                Use the exact origin above. Avoid allowing every website or exposing Ollama on your
+                network. See the README for platform-specific steps.
+              </p>
+              <p>
+                If no models appear, download a local chat model and click Retry. Embedding-only
+                models cannot generate chat answers. Cloud-backed models are not supported.
+              </p>
+            </div>
+          </details>
+          <p class="small muted independence">
+            Local Overview is independent and unofficial. It is not affiliated with Google or
+            Ollama.
+          </p>
+        </section>
+        <footer class="settings-footer">
+          <p class="small muted">
+            Stored locally in Chrome · <span id="footer-version">Version 0.1.0</span>
+          </p>
+          <button class="button subtle" id="restore" type="button">Restore defaults</button>
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="./options.js"></script>
+  </body>
+</html>

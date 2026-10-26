@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - name: Install browser test dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Run browser integration tests
+        run: xvfb-run --auto-servernum npm run test:browser
+      - name: Package unpacked extension
+        run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: local-overview-0.1.0
+          path: artifacts/*.zip
+          if-no-files-found: error
+          retention-days: 14

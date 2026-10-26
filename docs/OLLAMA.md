@@ -86,7 +86,7 @@ If you run Ollama manually rather than through systemd, use the terminal-server 
 
 ## Verify
 
-Open Local Overview Settings and refresh the installed model list. A successful model list confirms extension-to-server access. Select a local chat model, open a supported Google Search page, switch to Local AI, and generate a response.
+Open Local Overview Settings and refresh the installed model list. A successful model list confirms extension-to-server access. Select a local chat model, open a supported Google Search page, and generate a response from the Local AI Overview panel.
 
 If the list is empty, run `ollama list`, download a local chat model, and retry. Cloud-only entries are not available in this extension. Cold model loading can exceed the **25-second initial-response deadline**. Preload your selected model with `ollama run MODEL_NAME`, then retry in the extension while it remains loaded. A smaller model can reduce loading time and memory pressure.
 

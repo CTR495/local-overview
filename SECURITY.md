@@ -20,7 +20,7 @@ Include affected versions, relevant code paths, prerequisites, expected security
 - Grounding is optional and bounded. Its prompt instructs the model to treat sources as evidence rather than instructions. Prompting cannot guarantee that a language model ignores every malicious snippet; output is still rendered as inert text with controlled citation links.
 - Cloud-backed models are excluded. Operators should also disable Ollama cloud features. A hostile or modified local server is outside the extension's trust boundary.
 - In-flight cancellation, request identities, and navigation checks must prevent previous-query output from appearing in a new query's panel.
-- Native Google content must be restored on mode change, disable, or teardown.
+- Native Google content, visibility, and controls must remain untouched during generation, cancellation, disable, and teardown.
 
 ## Review priorities
 

@@ -48,18 +48,14 @@
         </select>
       </section>
 
-      <section class="popup-mode" aria-label="Overview mode">
+      <section class="popup-overview" aria-label="Local AI overview">
         <div class="section-label">
-          <h2>Search overview</h2>
+          <h2>Local AI overview</h2>
           <span class="tiny muted">GOOGLE SEARCH</span>
         </div>
-        <div class="segmented" role="group" aria-label="Overview mode">
-          <button id="mode-google" type="button" aria-pressed="true">Google</button
-          ><button id="mode-local" type="button" aria-pressed="false">
-            <span aria-hidden="true">✦</span> Local AI
-          </button>
-        </div>
-        <p class="muted small" id="mode-detail">Google’s original overview, when available.</p>
+        <p class="muted small" id="overview-detail">
+          Answers from your locally installed Ollama model.
+        </p>
       </section>
 
       <div class="privacy-note">

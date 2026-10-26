@@ -5,9 +5,6 @@ export const DEFAULTS: Readonly<Settings> = Object.freeze({
   enabled: true,
   endpoint: 'http://localhost:11434',
   model: '',
-  mode: 'google',
-  preferredMode: 'google',
-  rememberMode: true,
   autoGenerate: true,
   stream: true,
   grounding: false,
@@ -27,7 +24,6 @@ export function normalizeSettings(value: unknown): Settings {
   const input = value as Record<string, unknown>;
   for (const key of [
     'enabled',
-    'rememberMode',
     'autoGenerate',
     'stream',
     'grounding',
@@ -39,8 +35,6 @@ export function normalizeSettings(value: unknown): Settings {
   ] as const) {
     if (typeof input[key] === 'boolean') result[key] = input[key];
   }
-  for (const key of ['mode', 'preferredMode'] as const)
-    if (input[key] === 'google' || input[key] === 'local') result[key] = input[key];
   if (['auto', 'light', 'dark'].includes(String(input.theme)))
     result.theme = input.theme as Settings['theme'];
   if (['short', 'balanced', 'detailed'].includes(String(input.responseLength)))
@@ -60,7 +54,8 @@ export function normalizeSettings(value: unknown): Settings {
     result.temperature = Math.max(0, Math.min(2, input.temperature));
   return result;
 }
-// Each key is separate so a popup mode change cannot overwrite an options save.
+// Separate keys keep a popup model change from overwriting an options save.
+// Legacy provider-mode keys are deliberately ignored: Local Overview always adds its local panel.
 export async function getSettings(): Promise<Settings> {
   return normalizeSettings(await chrome.storage.local.get(Object.keys(DEFAULTS)));
 }

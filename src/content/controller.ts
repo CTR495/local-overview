@@ -1,14 +1,8 @@
 import { searchQuery } from '../shared/google';
 import { getSettings, saveSettings, watchSettings } from '../shared/settings';
 import { openOptions, requestModels } from '../shared/protocol';
-import type { Mode, Settings } from '../shared/types';
-import {
-  findNativeOverviews,
-  findResultsRoot,
-  HOST_ID,
-  NativeVisibility,
-  placeHost,
-} from '../google/detector';
+import type { Settings } from '../shared/types';
+import { findResultsRoot, HOST_ID, placeHost } from '../google/detector';
 import { collectSources } from '../google/sources';
 import { GenerationChannel } from './channel';
 import { OverviewView } from './view';
@@ -16,11 +10,9 @@ import { isGoogleDark } from './theme';
 
 export class OverviewController {
   private settings!: Settings;
-  private mode: Mode = 'google';
   private query: string | null = null;
   private signature = '';
   private view?: OverviewView;
-  private native = new NativeVisibility();
   private channel = new GenerationChannel();
   private observer?: MutationObserver;
   private observed?: HTMLElement;
@@ -36,7 +28,6 @@ export class OverviewController {
   async start(): Promise<void> {
     this.settings = await getSettings();
     if (this.dead) return;
-    this.mode = this.settings.rememberMode ? this.settings.mode : this.settings.preferredMode;
     this.unwatch = watchSettings((settings) => this.updateSettings(settings));
     this.themeObserver = new MutationObserver(() =>
       this.view?.settings(this.settings, isGoogleDark()),
@@ -80,17 +71,15 @@ export class OverviewController {
       this.query = query;
       this.stop(false);
       this.view?.clear();
-      this.native.restore();
-      if (!this.settings.rememberMode) this.mode = this.settings.preferredMode;
       this.refreshDOM();
-      if (query && this.settings.enabled && this.mode === 'local') {
-        void this.loadModels();
+      if (query && this.settings.enabled) {
         if (
           this.settings.autoGenerate &&
           !this.settings.interactionOnly &&
           (first || this.settings.autoRegenerate)
         )
           this.scheduleGenerate();
+        else void this.loadModels();
       }
     } else if (
       (this.settings.enabled && query && !this.view?.host.isConnected) ||
@@ -102,13 +91,10 @@ export class OverviewController {
   private scheduleGenerate(): void {
     clearTimeout(this.autoTimer);
     // Give navigation/delayed result DOM a chance to settle before optional grounding.
-    this.autoTimer = setTimeout(() => {
-      if (this.mode === 'local') void this.generate();
-    }, 700);
+    this.autoTimer = setTimeout(() => void this.generate(), 700);
   }
   private refreshDOM(): void {
     if (!this.settings.enabled || !this.query) {
-      this.native.restore();
       this.view?.destroy();
       this.view = undefined;
       this.observer?.disconnect();
@@ -119,7 +105,6 @@ export class OverviewController {
       // Avoid claiming or deleting an unrelated page element with the same ID.
       if (document.getElementById(HOST_ID)) return;
       this.view = new OverviewView({
-        mode: (mode) => this.setMode(mode, true),
         generate: () => {
           void this.generate();
         },
@@ -135,11 +120,7 @@ export class OverviewController {
       this.view.context([], this.settings.grounding);
     }
     placeHost(this.view.host);
-    const native = findNativeOverviews(findResultsRoot() ?? document);
-    if (this.mode === 'local') this.native.hide(native);
-    else this.native.restore();
     this.view.settings(this.settings, isGoogleDark());
-    this.view.mode(this.mode, native.length > 0);
     const root = findResultsRoot();
     if (root !== this.observed) {
       this.observer?.disconnect();
@@ -164,33 +145,14 @@ export class OverviewController {
       }
     }
   }
-  private setMode(mode: Mode, interaction: boolean): void {
-    const changed = this.mode !== mode;
-    this.mode = mode;
-    if (changed) this.stop(false);
-    this.refreshDOM();
-    if (interaction)
-      void saveSettings({ mode }).catch((error) =>
-        this.view?.notice(`Could not save mode: ${String(error)}`, true),
-      );
-    if (mode === 'local' && (changed || (interaction && !this.busy && !this.view?.hasAnswer))) {
-      void this.loadModels();
-      if (
-        this.settings.autoGenerate &&
-        (interaction || !this.settings.interactionOnly) &&
-        !this.view?.hasAnswer
-      )
-        this.scheduleGenerate();
-    }
-  }
   private async loadModels(): Promise<boolean> {
-    if (!this.view || this.mode !== 'local') return false;
+    if (!this.view || !this.settings.enabled) return false;
     const id = ++this.modelEpoch,
       view = this.view;
     view.connection('Connecting to Ollama…');
     try {
       const models = await requestModels();
-      if (id !== this.modelEpoch || this.view !== view || this.mode !== 'local') return false;
+      if (id !== this.modelEpoch || this.view !== view || !this.settings.enabled) return false;
       view.models(models, this.settings.model);
       if (!models.length) {
         view.connection('No local models');
@@ -226,7 +188,7 @@ export class OverviewController {
   private async generate(): Promise<void> {
     this.tick();
     clearTimeout(this.autoTimer);
-    if (!this.query || this.mode !== 'local' || !this.settings.enabled || !this.view) return;
+    if (!this.query || !this.settings.enabled || !this.view) return;
     this.stop(false);
     const epoch = ++this.epoch,
       view = this.view;
@@ -251,7 +213,7 @@ export class OverviewController {
       ? collectSources(findResultsRoot() ?? document, this.settings.maxResults)
       : [];
     view.context(sources, this.settings.grounding);
-    view.connection('Generating on your device', true);
+    view.connection('Generating with Ollama', true);
     this.channel.start({ query, sources }, (event) => {
       if (epoch !== this.epoch || this.view !== view) return;
       if (this.pageSignature() !== signature) {
@@ -295,6 +257,7 @@ export class OverviewController {
     if (this.dead) return;
     const before = this.settings;
     this.settings = next;
+    if (!next.autoGenerate || next.interactionOnly) clearTimeout(this.autoTimer);
     const generationChanged = (
       [
         'endpoint',
@@ -311,16 +274,13 @@ export class OverviewController {
       this.view?.clear();
       this.view?.context([], next.grounding);
     }
-    if (next.mode !== before.mode) this.setMode(next.mode, false);
-    else if (next.preferredMode !== before.preferredMode && !next.rememberMode)
-      this.setMode(next.preferredMode, false);
     this.refreshDOM();
-    if (generationChanged && next.enabled && this.mode === 'local') {
-      void this.loadModels();
+    if (generationChanged && next.enabled) {
       if (next.autoGenerate && !next.interactionOnly) this.scheduleGenerate();
-    } else if (next.enabled && !before.enabled && this.mode === 'local') {
-      void this.loadModels();
+      else void this.loadModels();
+    } else if (next.enabled && !before.enabled) {
       if (next.autoGenerate && !next.interactionOnly) this.scheduleGenerate();
+      else void this.loadModels();
     }
   }
   destroy(): void {
@@ -331,7 +291,6 @@ export class OverviewController {
     this.unwatch?.();
     this.observer?.disconnect();
     this.themeObserver?.disconnect();
-    this.native.restore();
     this.view?.destroy();
     window.removeEventListener('popstate', this.tick);
     window.removeEventListener('pageshow', this.tick);

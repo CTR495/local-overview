@@ -19,7 +19,7 @@ let behavior: 'normal' | 'slow' | 'error' | 'offline' | 'empty' | 'broken' = 'no
 let unsafeOutput = false;
 const prompts: Record<string, unknown>[] = [];
 const fixture = (native = true, dark = false) =>
-  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Search fixture</title><style>body{margin:0;background:${dark ? '#202124' : '#fff'};color:${dark ? '#e8eaed' : '#202124'};font:14px Arial}header{height:90px;border-bottom:1px solid #8883;padding:25px 32px;box-sizing:border-box}input{margin-left:45px;padding:13px 25px;border:1px solid #8885;border-radius:30px;width:560px;background:transparent;color:inherit}main{margin:30px 30px 50px 180px;max-width:700px}a{color:${dark ? '#b5a4ff' : '#4030aa'};text-decoration:none}h3{font-size:20px;font-weight:400;margin:8px 0}article{margin:25px 0;line-height:1.65}h2{font-size:19px}</style></head><body><header><strong>Search fixture</strong><input aria-label="Search" name="q" value="why is the sky blue"></header><main id="search">${native ? '<section data-ai-overview="true" style="display: grid"><h2>AI Overview</h2><p>Representative native overview. Its content, controls, and original display value must be restored.</p><button onclick="this.textContent=\'Expanded native overview\'">Show more</button></section>' : ''}<div id="rso"><article><a href="https://science.nasa.gov/earth/why-is-the-sky-blue/"><h3>Why is the sky blue? — NASA Science</h3></a><p>Air molecules scatter shorter wavelengths of sunlight more strongly. Blue light is scattered in all directions.</p></article><article><a href="https://www.noaa.gov/jetstream/atmosphere/blue-sky"><h3>Sunlight and our atmosphere — NOAA</h3></a><p>Light is scattered by gases and particles in the atmosphere. The sky changes color with the Sun’s angle.</p></article></div></main></body></html>`;
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Search fixture</title><style>body{margin:0;background:${dark ? '#202124' : '#fff'};color:${dark ? '#e8eaed' : '#202124'};font:14px Arial}header{height:90px;border-bottom:1px solid #8883;padding:25px 32px;box-sizing:border-box}input{margin-left:45px;padding:13px 25px;border:1px solid #8885;border-radius:30px;width:560px;background:transparent;color:inherit}main{margin:30px 30px 50px 180px;max-width:700px}a{color:${dark ? '#b5a4ff' : '#4030aa'};text-decoration:none}h3{font-size:20px;font-weight:400;margin:8px 0}article{margin:25px 0;line-height:1.65}h2{font-size:19px}</style></head><body><header><strong>Search fixture</strong><input aria-label="Search" name="q" value="why is the sky blue"></header><main id="search">${native ? '<section data-ai-overview="true" style="display: grid"><h2>AI Overview</h2><p>Representative native overview. Google’s original answer and controls remain available alongside Local Overview.</p><button onclick="this.textContent=\'Expanded native overview\'">Show more</button></section>' : ''}<div id="rso"><article><a href="https://science.nasa.gov/earth/why-is-the-sky-blue/"><h3>Why is the sky blue? — NASA Science</h3></a><p>Air molecules scatter shorter wavelengths of sunlight more strongly. Blue light is scattered in all directions.</p></article><article><a href="https://www.noaa.gov/jetstream/atmosphere/blue-sky"><h3>Sunlight and our atmosphere — NOAA</h3></a><p>Light is scattered by gases and particles in the atmosphere. The sky changes color with the Sun’s angle.</p></article></div></main></body></html>`;
 async function configure(patch: Record<string, unknown>) {
   await worker.evaluate(async (value) => {
     await chrome.storage.local.set(value);
@@ -151,11 +151,8 @@ test.beforeEach(async () => {
   prompts.length = 0;
   await configure({
     enabled: true,
-    mode: 'google',
-    preferredMode: 'google',
-    rememberMode: true,
     model: '',
-    autoGenerate: true,
+    autoGenerate: false,
     stream: true,
     grounding: false,
     interactionOnly: false,
@@ -185,17 +182,19 @@ test.afterAll(async () => {
     await rm(profile, { recursive: true, force: true });
 });
 
-test('real MV3 transport streams, switches models, cites supplied sources, and restores native controls', async () => {
+test('real MV3 transport streams, switches models, cites sources, and leaves Google controls untouched', async () => {
   const page = await search();
   const host = page.locator('#local-overview-root'),
     native = page.locator('[data-ai-overview]');
+  const originalHTML = await native.evaluate((el) => el.outerHTML);
+  await expect(native).toBeVisible();
+  await expect(host.locator('[data-mode]')).toHaveCount(0);
+  await expect(host).not.toContainText('On your device');
   await page.waitForTimeout(250);
-  expect(tagsCount).toBe(0);
   expect(chatCount).toBe(0);
   await configure({ grounding: true });
   unsafeOutput = true;
-  await host.getByRole('button', { name: 'Local AI', exact: true }).click();
-  await expect(native).toBeHidden();
+  await host.locator('.generate').click();
   await expect(host.locator('.answer')).toContainText('☀');
   await expect(host.getByRole('button', { name: 'Stop generating' })).toBeVisible();
   await expect(host.getByRole('button', { name: '↻ Regenerate' })).toBeVisible();
@@ -208,24 +207,29 @@ test('real MV3 transport streams, switches models, cites supplied sources, and r
   await expect(host.getByLabel('Ollama model').locator('option')).toHaveCount(2);
   unsafeOutput = false;
   await host.getByLabel('Ollama model').selectOption('qwen-local:4b');
+  await expect(host.locator('.answer')).toHaveText('');
+  await host.locator('.generate').click();
   await expect.poll(() => chatCount).toBe(2);
   await expect(host.getByRole('button', { name: '↻ Regenerate' })).toBeVisible();
   expect(prompts[1].model).toBe('qwen-local:4b');
   await mkdir('artifacts/screenshots', { recursive: true });
-  await page.screenshot({ path: 'artifacts/screenshots/google-local.png', fullPage: true });
-  await host.getByRole('button', { name: 'Google', exact: true }).click();
+  await page.screenshot({
+    path: 'artifacts/screenshots/google-local.png',
+    fullPage: true,
+    animations: 'disabled',
+  });
   await expect(native).toBeVisible();
-  expect(await native.evaluate((el) => (el as HTMLElement).style.display)).toBe('grid');
+  expect(await native.evaluate((el) => el.outerHTML)).toBe(originalHTML);
   await native.getByRole('button').click();
   await expect(native.getByRole('button')).toHaveText('Expanded native overview');
   expect(chatCount).toBe(2);
 });
+
 test('missing/delayed native overview, dark theme, duplicate prevention and disable', async () => {
   const page = await search(false, true);
   const host = page.locator('#local-overview-root');
   await expect(host).toHaveAttribute('data-theme', 'dark');
-  await expect(host.locator('.google-note')).toContainText('unavailable');
-  await host.getByRole('button', { name: 'Local AI', exact: true }).click();
+  await host.locator('.generate').click();
   await expect(host.getByRole('button', { name: '↻ Regenerate' })).toBeVisible();
   await page.evaluate(() => {
     const native = document.createElement('section');
@@ -233,7 +237,7 @@ test('missing/delayed native overview, dark theme, duplicate prevention and disa
     native.textContent = 'Delayed native AI Overview';
     document.querySelector('#search')!.append(native);
   });
-  await expect(page.locator('[data-ai-overview]')).toBeHidden();
+  await expect(page.locator('[data-ai-overview]')).toBeVisible();
   for (let i = 0; i < 12; i++)
     await page.evaluate(() =>
       document.querySelector('#rso')!.append(document.createElement('span')),
@@ -241,17 +245,22 @@ test('missing/delayed native overview, dark theme, duplicate prevention and disa
   await page.waitForTimeout(500);
   await expect(host).toHaveCount(1);
   await mkdir('artifacts/screenshots', { recursive: true });
-  await page.screenshot({ path: 'artifacts/screenshots/google-dark.png', fullPage: true });
+  await page.screenshot({
+    path: 'artifacts/screenshots/google-dark.png',
+    fullPage: true,
+    animations: 'disabled',
+  });
   await configure({ enabled: false });
   await expect(host).toHaveCount(0);
   await expect(page.locator('[data-ai-overview]')).toBeVisible();
   await expect(page.locator('#rso h3')).toHaveCount(2);
 });
+
 test('Stop cancels the actual request; navigation rejects stale chunks and keeps one interface', async () => {
   behavior = 'slow';
+  await configure({ autoGenerate: true });
   const page = await search();
   const host = page.locator('#local-overview-root');
-  await host.getByRole('button', { name: 'Local AI', exact: true }).click();
   await expect(host.locator('.answer')).toContainText('sky appears');
   const previous = cancelledCount;
   await host.getByRole('button', { name: 'Stop generating' }).click();
@@ -270,14 +279,16 @@ test('Stop cancels the actual request; navigation rejects stale chunks and keeps
     await page.waitForTimeout(250);
   }
   await expect(host).toHaveCount(1);
-  await host.getByRole('button', { name: 'Google', exact: true }).click();
   await expect(page.locator('[data-ai-overview]')).toBeVisible();
+  await configure({ enabled: false });
+  await expect(host).toHaveCount(0);
 });
+
 test('offline, empty models, model errors, and interrupted streams recover with Retry', async () => {
   const page = await search();
   const host = page.locator('#local-overview-root');
   behavior = 'offline';
-  await host.getByRole('button', { name: 'Local AI', exact: true }).click();
+  await host.locator('.generate').click();
   await expect(host.locator('.notice')).toContainText(/offline|running|Start Ollama/i);
   behavior = 'empty';
   await host.getByRole('button', { name: 'Retry', exact: true }).click();
@@ -293,15 +304,32 @@ test('offline, empty models, model errors, and interrupted streams recover with 
   await expect(host.getByRole('button', { name: '↻ Regenerate' })).toBeVisible();
   expect(JSON.stringify(prompts.at(-1))).not.toContain('NASA');
 });
-test('actual extension popup and options save settings and restrict endpoints', async () => {
+
+test('actual extension popup and options save settings, restrict endpoints, and expose no provider selector', async () => {
   const base = worker.url().replace(/\/background\.js$/, '');
   const popup = await context.newPage();
+  await popup.setViewportSize({ width: 354, height: 600 });
   await popup.goto(`${base}/popup.html`);
   await expect(popup.locator('body')).toContainText('Local Overview');
   await expect(popup.locator('body')).toContainText('llama-local');
+  await expect(popup.locator('#enabled')).toBeChecked();
+  await expect(popup.locator('[data-mode], #mode, #preferredMode, #rememberMode')).toHaveCount(0);
+  await popup.locator('#model').selectOption('qwen-local:4b');
+  await expect(popup.locator('#save-status')).toContainText('Saved');
+  await mkdir('artifacts/screenshots', { recursive: true });
+  await popup.locator('body').screenshot({
+    path: 'artifacts/screenshots/popup.png',
+    animations: 'disabled',
+  });
   const options = await context.newPage();
   await options.goto(`${base}/options.html`);
-  await expect(options.locator('#model option')).toHaveCount(3); // automatic + two local models
+  await expect(options.locator('#model option')).toHaveCount(3);
+  await expect(options.locator('#mode, #preferredMode, #rememberMode')).toHaveCount(0);
+  await options.screenshot({
+    path: 'artifacts/screenshots/options.png',
+    fullPage: true,
+    animations: 'disabled',
+  });
   await options.locator('#endpoint').fill('https://example.com');
   await options.locator('#connect').click();
   await expect(options.locator('#save-status')).toContainText('loopback');

@@ -1,6 +1,6 @@
 import { getSettings, saveSettings, watchSettings } from '../shared/settings';
 import { openOptions, requestModels } from '../shared/protocol';
-import type { Mode, Model, Settings } from '../shared/types';
+import type { Model, Settings } from '../shared/types';
 import {
   applyAppearance,
   connectionState,
@@ -20,16 +20,11 @@ function render(next: Settings): void {
   settings = next;
   applyAppearance(settings);
   element<HTMLInputElement>('enabled').checked = settings.enabled;
-  const mode = settings.mode;
-  for (const value of ['google', 'local'] as const)
-    element(`mode-${value}`).setAttribute('aria-pressed', String(mode === value));
-  element('mode-detail').textContent = !settings.enabled
-    ? 'Disabled. Google Search keeps its original interface.'
-    : mode === 'google'
-      ? 'Google’s original overview, when available.'
-      : settings.interactionOnly
-        ? 'Local AI is selected. Click Generate on your search.'
-        : 'Answers from your locally installed Ollama model.';
+  element('overview-detail').textContent = !settings.enabled
+    ? 'Disabled. Enable Local Overview to add local answers to search.'
+    : settings.interactionOnly || !settings.autoGenerate
+      ? 'Click Generate overview on your search to ask your local model.'
+      : 'Local AI overviews appear automatically on supported searches.';
   renderModelOptions(select, models, settings.model);
   if (endpointChanged) void refresh();
 }
@@ -75,8 +70,6 @@ async function init(): Promise<void> {
     (event) => void persist({ enabled: (event.target as HTMLInputElement).checked }),
   );
   select.addEventListener('change', () => void persist({ model: select.value }));
-  for (const mode of ['google', 'local'] as Mode[])
-    element(`mode-${mode}`).addEventListener('click', () => void persist({ mode }));
   element('refresh').addEventListener('click', () => void refresh());
   element('settings').addEventListener('click', openOptions);
   void refresh();

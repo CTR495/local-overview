@@ -1,12 +1,8 @@
-export type Mode = 'google' | 'local';
 export type Theme = 'auto' | 'light' | 'dark';
 export interface Settings {
   enabled: boolean;
   endpoint: string;
   model: string;
-  mode: Mode;
-  preferredMode: Mode;
-  rememberMode: boolean;
   autoGenerate: boolean;
   stream: boolean;
   grounding: boolean;

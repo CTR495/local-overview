@@ -1,11 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { findNativeOverviews, HOST_ID, NativeVisibility, placeHost } from '../src/google/detector';
+import { HOST_ID, placeHost } from '../src/google/detector';
 import { collectSources, safeSourceUrl } from '../src/google/sources';
 import { searchQuery } from '../src/shared/google';
 
-const native =
-  '<section id="native"><h2>AI Overview</h2><p>This is the native overview, with enough explanatory text to represent the semantic answer section on a Google Search results page.</p><button>Show more</button></section>';
 const result = (id: number, options = '') =>
   `<article ${options}><a href="https://example.org/result-${id}"><h3>Useful result ${id}</h3></a><p>Visible public snippet for result ${id} that gives useful factual context for the current search query.</p></article>`;
 
@@ -45,121 +43,7 @@ describe('supported Google search URLs', () => {
   });
 });
 
-describe('native overview detection and safe restoration', () => {
-  it('detects a semantic overview while leaving organic results separate', () => {
-    document.body.innerHTML = `<main id="search">${native}${result(1)}</main>`;
-    const panels = findNativeOverviews(document.querySelector('#search')!);
-    expect(panels).toEqual([document.querySelector('#native')]);
-    expect(panels[0].contains(document.querySelector('article'))).toBe(false);
-  });
-
-  it('detects delayed content without requiring a native panel at first render', () => {
-    document.body.innerHTML = `<main id="search">${result(1)}</main>`;
-    expect(findNativeOverviews()).toEqual([]);
-    document.querySelector('#search')!.insertAdjacentHTML('afterbegin', native);
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['native']);
-  });
-
-  it('detects known semantic data attributes without relying on CSS class names', () => {
-    document.body.innerHTML =
-      '<main id="search"><div id="panel" data-attrid="SGE"><p>A native answer</p></div></main>';
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['panel']);
-  });
-
-  it('detects a standalone span label inside nested native controls and answer text', () => {
-    document.body.innerHTML = `<main id="search"><div id="plain-native"><div><span aria-hidden="true">✦</span><span>AI Overview</span><button>About this result</button></div><p>${'A useful native overview with explanatory text. '.repeat(4)}</p><button>Show more</button></div>${result(1)}</main>`;
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['plain-native']);
-  });
-
-  it('detects div labels and aria-labelled regions without proprietary CSS classes', () => {
-    document.body.innerHTML =
-      '<main id="search"><section id="div-native"><div> AI\n Overview </div><p>A native answer</p></section><div id="aria-native" role="region" aria-label="AI Overview"><p>Another native answer</p></div></main>';
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['div-native', 'aria-native']);
-  });
-
-  it('recognizes an aria-labelled div container when it includes a substantial answer', () => {
-    document.body.innerHTML = `<main id="search"><div id="aria-div-native" aria-label="AI Overview"><p>${'A native answer without a semantic heading or region. '.repeat(4)}</p></div>${result(1)}</main>`;
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['aria-div-native']);
-  });
-
-  it('does not hide linked organic titles or standalone snippet labels inside a result', () => {
-    document.body.innerHTML = `<main id="search"><article><a href="https://example.org"><h2><span>AI Overview</span></h2></a><section><div>AI Overview</div><p>${'An organic result snippet. '.repeat(8)}</p></section></article><div><a href="https://example.org/second"><h3>Another organic result</h3></a><div><span>AI Overview</span></div><p>${'A second public snippet. '.repeat(6)}</p></div></main>`;
-    expect(findNativeOverviews()).toEqual([]);
-  });
-
-  it('does not mistake forms, navigation controls, or incidental source text for an overview', () => {
-    document.body.innerHTML = `<main id="search"><nav><section><span>AI Overview</span><p>${'Other navigation text. '.repeat(8)}</p></section></nav><form><section><div aria-label="AI Overview">Form control</div></section></form><section><p>Read more about <span>AI Overview</span> and how it works.</p></section><section><button><span>AI Overview</span></button></section></main>`;
-    expect(findNativeOverviews()).toEqual([]);
-  });
-
-  it('bounds plain-label traversal and scopes default scans to the results root', () => {
-    document.body.innerHTML = `<section id="outside"><span>AI Overview</span><p>Outside the results root</p></section><main id="search">${'<i></i>'.repeat(2001)}<section id="too-late"><span>AI Overview</span><p>A later unknown layout</p></section></main>`;
-    expect(findNativeOverviews()).toEqual([]);
-    document.getElementById('too-late')!.setAttribute('data-attrid', 'SGE');
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['too-late']);
-  });
-
-  it('does not hide a broad main/search root or a result titled AI Overview', () => {
-    document.body.innerHTML =
-      '<main id="search" data-attrid="SGE"><h2>AI Overview</h2><article><a href="https://example.org"><h3>AI Overview</h3></a><p>An organic result with that exact title.</p></article></main>';
-    expect(findNativeOverviews()).toEqual([]);
-  });
-
-  it('ignores extension-owned headings and containers containing the extension', () => {
-    document.body.innerHTML = `<main id="search"><section data-ai-overview="true"><div id="${HOST_ID}"><h2>AI Overview</h2></div><p>Some wrapper content</p></section></main>`;
-    expect(findNativeOverviews()).toEqual([]);
-  });
-
-  it('deduplicates nested native candidates', () => {
-    document.body.innerHTML =
-      '<main id="search"><section id="outer" data-ai-overview="true"><div data-attrid="SGE"><h2>AI Overview</h2><p>Nested native body</p></div></section></main>';
-    expect(findNativeOverviews().map((node) => node.id)).toEqual(['outer']);
-  });
-
-  it('restores the exact original inline display value and priority over repeated hides', () => {
-    document.body.innerHTML = `<main id="search">${native}${result(1)}</main>`;
-    const panel = document.getElementById('native')!;
-    panel.style.setProperty('display', 'grid', 'important');
-    const visibility = new NativeVisibility();
-    visibility.hide([panel]);
-    visibility.hide([panel]);
-    expect(panel.style.getPropertyValue('display')).toBe('none');
-    expect(panel.style.getPropertyPriority('display')).toBe('important');
-    expect(document.querySelector('article')!.getAttribute('style')).toBeNull();
-    expect(panel.querySelector('button')!.textContent).toBe('Show more');
-    visibility.restore();
-    expect(panel.style.getPropertyValue('display')).toBe('grid');
-    expect(panel.style.getPropertyPriority('display')).toBe('important');
-    visibility.restore();
-    expect(panel.style.getPropertyValue('display')).toBe('grid');
-  });
-
-  it('removes only its display override when the original display was absent', () => {
-    const panel = document.createElement('section');
-    panel.style.color = 'red';
-    panel.hidden = true;
-    const visibility = new NativeVisibility();
-    visibility.hide([panel]);
-    visibility.restore();
-    expect(panel.style.getPropertyValue('display')).toBe('');
-    expect(panel.style.color).toBe('red');
-    expect(panel.hidden).toBe(true);
-  });
-
-  it('restores candidates that disappear from a later detection set', () => {
-    const a = document.createElement('section'),
-      b = document.createElement('section');
-    a.style.display = 'flex';
-    b.style.display = 'block';
-    const visibility = new NativeVisibility();
-    visibility.hide([a]);
-    visibility.hide([b]);
-    expect(a.style.display).toBe('flex');
-    expect(b.style.display).toBe('none');
-    visibility.restore();
-    expect(b.style.display).toBe('block');
-  });
-
+describe('search interface placement', () => {
   it('positions one host ahead of results and falls back without overlaying content', () => {
     const host = document.createElement('div');
     host.id = HOST_ID;

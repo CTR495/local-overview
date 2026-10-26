@@ -87,38 +87,8 @@ button svg {
   height: 25px;
   flex: none;
 }
-.badge {
-  font-size: 10px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 1px 5px;
-  letter-spacing: 0.07em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.switch {
+.toolbar > .settings {
   margin-left: auto;
-  display: flex;
-  border: 1px solid var(--line);
-  padding: 3px;
-  border-radius: 99px;
-  background: var(--surface);
-  gap: 3px;
-}
-.switch button {
-  border: 0;
-  background: none;
-  border-radius: 99px;
-  padding: 6px 16px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--muted);
-}
-.switch button[aria-pressed='true'] {
-  background: var(--bg);
-  box-shadow: 0 1px 4px #00000012;
-  color: var(--accent);
-  font-weight: 600;
 }
 .settings {
   padding: 6px;
@@ -133,11 +103,6 @@ button svg {
 }
 .settings:hover {
   background: var(--surface);
-}
-.google-note {
-  color: var(--muted);
-  font-size: 12px;
-  margin: 0 0 10px;
 }
 .card {
   position: relative;
@@ -469,12 +434,6 @@ button svg {
 @media (max-width: 600px) {
   .brand {
     font-size: 13px;
-  }
-  .badge {
-    display: none;
-  }
-  .switch button {
-    padding: 5px 10px;
   }
   .toolbar {
     gap: 7px;

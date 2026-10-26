@@ -23,11 +23,10 @@ const checkboxes = [
   'reducedMotion',
   'sparkle',
   'showStats',
-  'rememberMode',
   'interactionOnly',
   'autoRegenerate',
 ] as const;
-const selects = ['responseLength', 'theme', 'mode', 'preferredMode'] as const;
+const selects = ['responseLength', 'theme'] as const;
 const model = element<HTMLSelectElement>('model');
 const endpoint = element<HTMLInputElement>('endpoint');
 

@@ -49,29 +49,36 @@ describe('settings validation', () => {
   it('keeps behavioral switches distinct', () => {
     expect(
       normalizeSettings({
-        mode: 'local',
-        preferredMode: 'google',
         interactionOnly: true,
         autoGenerate: false,
         autoRegenerate: true,
-        rememberMode: false,
       }),
     ).toMatchObject({
-      mode: 'local',
-      preferredMode: 'google',
       interactionOnly: true,
       autoGenerate: false,
       autoRegenerate: true,
-      rememberMode: false,
     });
   });
+  it('ignores saved provider modes from earlier builds while preserving local preferences', () => {
+    const settings = normalizeSettings({
+      mode: 'google',
+      preferredMode: 'google',
+      rememberMode: true,
+      model: 'existing:local',
+      autoGenerate: false,
+    });
+    expect(settings).toMatchObject({ model: 'existing:local', autoGenerate: false });
+    expect(settings).not.toHaveProperty('mode');
+    expect(settings).not.toHaveProperty('preferredMode');
+    expect(settings).not.toHaveProperty('rememberMode');
+  });
   it('reads persistent settings and writes only provided known keys', async () => {
-    const get = vi.fn().mockResolvedValue({ model: 'local:model', mode: 'local' });
+    const get = vi.fn().mockResolvedValue({ model: 'local:model', enabled: true });
     const set = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('chrome', { storage: { local: { get, set } } });
-    expect(await getSettings()).toMatchObject({ model: 'local:model', mode: 'local' });
-    await saveSettings({ mode: 'google' });
-    expect(set).toHaveBeenCalledWith({ mode: 'google' });
+    expect(await getSettings()).toMatchObject({ model: 'local:model', enabled: true });
+    await saveSettings({ enabled: false });
+    expect(set).toHaveBeenCalledWith({ enabled: false });
     await expect(saveSettings({ endpoint: 'https://example.com' })).rejects.toThrow('loopback');
     expect(set).toHaveBeenCalledTimes(1);
   });

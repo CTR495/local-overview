@@ -1,6 +1,6 @@
-# Publish after maintainer approval
+# Publishing and releases
 
-This project is prepared locally. Repository creation and pushes require the maintainer's explicit approval. Build and test commands do not publish anything.
+The intended canonical repository is `CTR495/local-overview`; public repository and release publication are pending. Repository creation, pushes, and release publication are maintainer actions; build and test commands do not publish anything. The maintainer authorized the first public repository and `v0.1.0` release after reviewing the local build.
 
 Before publishing, run `npm run verify` and `npm run test:browser`, review `git status`, and confirm that dependencies, build outputs, browser profiles, local paths, credentials, and personal search fixtures are excluded. Keep honest validation notes in the release description.
 
@@ -44,6 +44,15 @@ git push -u origin main
 
 Verify the repository URL in a signed-out browser and confirm its visibility is Public. Public hosting makes the source downloadable; it does not install the extension into Chrome or submit it to the Chrome Web Store.
 
-## Optional release package
+## Release package
 
-Run `npm run package` to produce a ZIP in `artifacts/`. Inspect its file list and load an extracted copy in a disposable Chrome profile. Attach it to a GitHub release only after separately approving the release. The ZIP contains the built extension, while the source repository remains the canonical contribution surface.
+Run `npm run package` to produce a ZIP in `artifacts/`. Inspect its file list and load an extracted copy in a disposable Chrome profile. The ZIP contains the built extension, license, and privacy policy; the source repository remains the canonical contribution surface.
+
+For the approved first release, confirm that the reviewed commit is on `main`, the remote is the intended public repository, and the tag/release does not already exist. Then run:
+
+```sh
+gh release create v0.1.0 artifacts/local-overview-0.1.0.zip --repo CTR495/local-overview --target main --title "Local Overview v0.1.0" --notes-file docs/RELEASE-v0.1.0.md
+gh release view v0.1.0 --repo CTR495/local-overview --json url,isDraft,assets
+```
+
+Check the public repository and release URLs without authentication. Download the attached ZIP and verify it matches the local reviewed artifact. Do not replace an existing release asset or move a tag without reviewing the existing publication.

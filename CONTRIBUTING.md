@@ -17,7 +17,7 @@ Load `dist/` using **Developer mode → Load unpacked** at `chrome://extensions`
 
 ## Design boundaries
 
-- Make native Google visibility changes reversible. Do not delete native overview nodes or hide broad search containers.
+- Leave Google's native overview, visibility, controls, and results untouched. The extension adds and removes only its own panel.
 - Keep all Ollama networking in the background service worker. Validate senders, message shape, endpoint, model, and limits again at that trust boundary.
 - Keep generation endpoints loopback-only and reject redirects. Do not add remote inference, telemetry, proxy services, or remote code.
 - Treat search snippets, queries, model output, model names, and API errors as untrusted text. Never interpolate them into `innerHTML`.
@@ -30,7 +30,7 @@ Load `dist/` using **Developer mode → Load unpacked** at `chrome://extensions`
 
 Explain the problem, resulting behavior, and checks performed. Add meaningful tests for changed parsing, messaging, cancellation, visibility, grounding, or settings behavior. Run `npm run verify` before submitting and run the browser tests when UI or navigation behavior changes.
 
-Google markup changes frequently. For detection issues, include a small representative fixture with the relevant semantic structure. Remove names, account identifiers, query history, tracking tokens, sensitive text, and unrelated page content. Never commit a full personal Google page dump, browser profile, downloaded model, secret, or machine-specific path.
+Google markup changes frequently. For placement or context-collection issues, include a small representative fixture with the relevant semantic structure. Remove names, account identifiers, query history, tracking tokens, sensitive text, and unrelated page content. Never commit a full personal Google page dump, browser profile, downloaded model, secret, or machine-specific path.
 
 State explicitly whether you tested against mocked fixtures, a real browser with fixtures, live Google Search, and/or a real Ollama model. Do not label fixture success as live compatibility. Use [docs/TESTING.md](docs/TESTING.md) for manual coverage.
 

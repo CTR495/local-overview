@@ -1,12 +1,11 @@
 import styles from './view.css';
-import type { GenerationStats, Mode, Model, Settings, Source } from '../shared/types';
+import type { GenerationStats, Model, Settings, Source } from '../shared/types';
 import { HOST_ID } from '../google/detector';
 const SPARK =
   '<svg class="spark" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M14 2c1.7 8 4 10.3 12 12-8 1.7-10.3 4-12 12C12.3 18 10 15.7 2 14 10 12.3 12.3 10 14 2Z"/><path d="M26 1c.7 3.3 1.7 4.3 5 5-3.3.7-4.3 1.7-5 5-.7-3.3-1.7-4.3-5-5 3.3-.7 4.3-1.7 5-5Z"/></svg>';
 const GEAR =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m9.4 3-.7 2.2-2 .9-2.1-.5-2 3.5L4 10.7v2.5l-1.4 1.6 2 3.5 2.2-.5 1.9.9.7 2.3h4.1l.7-2.3 2-.9 2.1.5 2-3.5-1.4-1.6v-2.5l1.4-1.6-2-3.5-2.2.5-1.9-.9-.7-2.2Z"/><circle cx="11.5" cy="12" r="3.2"/></svg>';
 export interface ViewActions {
-  mode(mode: Mode): void;
   generate(): void;
   stop(): void;
   settings(): void;
@@ -26,17 +25,10 @@ export class OverviewView {
     this.shadow = this.host.attachShadow({ mode: 'open' });
     // This template is constant. All search, model, and generated text uses textContent.
     this.shadow.innerHTML = `<style>${styles}</style>
-      <div class="toolbar"><div class="brand">${SPARK}<span>Local Overview</span><span class="badge">On your device</span></div>
-      <div class="switch" role="group" aria-label="Overview provider"><button data-mode="google" aria-pressed="true">Google</button><button data-mode="local" aria-pressed="false">Local AI</button></div><button class="settings" aria-label="Open Local Overview settings" title="Settings">${GEAR}</button></div>
-      <p class="google-note" role="status"></p>
-      <section class="card" aria-label="Local AI Overview" hidden><header class="card-head"><div><div class="eyebrow">Local AI Overview</div><div class="connection"><span class="dot"></span><span class="status">Ready to connect</span></div></div><div class="model-row"><label for="lo-model">Model</label><select id="lo-model" aria-label="Ollama model"><option value="">Select a local model</option></select><button class="settings refresh" aria-label="Refresh installed models" title="Refresh models">↻</button></div></header>
+      <div class="toolbar"><div class="brand">${SPARK}<span>Local Overview</span></div><button class="settings" aria-label="Open Local Overview settings" title="Settings">${GEAR}</button></div>
+      <section class="card" aria-label="Local AI Overview"><header class="card-head"><div><div class="eyebrow">Local AI Overview</div><div class="connection"><span class="dot"></span><span class="status">Ready to connect</span></div></div><div class="model-row"><label for="lo-model">Model</label><select id="lo-model" aria-label="Ollama model"><option value="">Select a local model</option></select><button class="settings refresh" aria-label="Refresh installed models" title="Refresh models">↻</button></div></header>
       <div class="body"><p class="grounding" data-grounded="false"></p><div class="empty"><h2 class="empty-title">A little perspective. Locally.</h2><p class="empty-text">Turn this search into a helpful overview using a model on your computer.</p></div><div class="skeleton" aria-hidden="true" hidden><i></i><i></i><i></i></div><div class="answer" dir="auto"></div><div class="notice" hidden role="status"></div><details class="sources" hidden open><summary>Search context</summary><div class="source-grid"></div></details><details class="stats" hidden><summary>Generation statistics</summary><dl></dl></details></div>
       <footer class="foot"><div class="actions"><button class="button primary generate">Generate overview</button><button class="button stop" hidden>Stop generating</button><button class="button copy" hidden>Copy response</button></div><span class="local-label">◇ &nbsp;Powered by local Ollama</span></footer></section><span class="sr-only announcement" aria-live="polite"></span>`;
-    this.shadow
-      .querySelectorAll<HTMLButtonElement>('[data-mode]')
-      .forEach((button) =>
-        button.addEventListener('click', () => actions.mode(button.dataset.mode as Mode)),
-      );
     this.el<HTMLButtonElement>('.settings').addEventListener('click', actions.settings);
     this.el<HTMLButtonElement>('.generate').addEventListener('click', actions.generate);
     this.el<HTMLButtonElement>('.stop').addEventListener('click', actions.stop);
@@ -68,19 +60,6 @@ export class OverviewView {
     this.host.dataset.sparkle = String(settings.sparkle);
     this.el('.stats').hidden = !settings.showStats || !this.el('.stats dl').childElementCount;
     if (settings.model) this.el<HTMLSelectElement>('select').value = settings.model;
-  }
-  mode(mode: Mode, nativeAvailable: boolean): void {
-    this.shadow
-      .querySelectorAll<HTMLButtonElement>('[data-mode]')
-      .forEach((button) =>
-        button.setAttribute('aria-pressed', String(button.dataset.mode === mode)),
-      );
-    this.el('.card').hidden = mode !== 'local';
-    const note = this.el('.google-note');
-    note.hidden = mode === 'local';
-    note.textContent = nativeAvailable
-      ? 'Google’s original AI Overview is shown below.'
-      : 'Google AI Overview is unavailable or has not been detected on this page. You can still use Local AI.';
   }
   connection(text: string, online = false): void {
     this.el('.status').textContent = text;

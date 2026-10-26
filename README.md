@@ -2,16 +2,20 @@
 
 **Your search. Your model. Your computer.**
 
-Local Overview is an independent Chrome extension that adds a **Google | Local AI** switch to Google Search. Keep Google's own AI Overview, or generate an alternative using a model installed in [Ollama](https://ollama.com/). The original search results remain available in either mode.
+Local Overview is an independent Chrome extension that adds a **Local AI Overview** to Google Search using a model installed in [Ollama](https://ollama.com/). The local panel appears alongside Google's original results and AI Overview, which stay available and unchanged.
 
 Version **0.1.0** · Manifest V3 · TypeScript · No frontend framework · MIT
+
+[Source repository](https://github.com/CTR495/local-overview) · [Release downloads](https://github.com/CTR495/local-overview/releases)
+
+Repository and release publication are pending; these are the intended public URLs.
 
 This project is unofficial and is not affiliated with, endorsed by, or sponsored by Google or Ollama.
 
 ## Features
 
-- Reversible switching: temporarily hide a detected Google AI Overview, then restore it without reloading.
-- A Local AI overview even when Google has no overview for a query.
+- A dedicated Local AI panel that leaves Google's original AI Overview and search results untouched.
+- Local generation works whether or not Google provides an overview for the query.
 - Incremental Ollama streaming, cancellation, regeneration, and installed-model selection.
 - Optional grounding in a limited set of visible result titles, URLs, and snippets; no extra result-page requests.
 - Linked citations restricted to collected sources, plus a clear notice when current search context is unavailable.
@@ -29,7 +33,7 @@ The search screenshots show the built Manifest V3 extension running in Chromium 
 
 ![Local Overview popup](docs/screenshots/popup.png)
 
-[View the options page screenshot](docs/screenshots/options.png). These are real Chromium captures of the extension’s page code with mocked Chrome storage and local model discovery; they do not show a live Google page or a live Ollama session.
+[View the options page screenshot](docs/screenshots/options.png). All four images show the actual unpacked extension with real Chrome APIs and controlled model discovery and responses from a loopback HTTP mock. They do not show a live Google page or a live Ollama session.
 
 ## Requirements
 
@@ -73,8 +77,8 @@ For a fresh checkout without a lockfile during development, use `npm install` on
 3. Select **Load unpacked**.
 4. Choose the generated **`dist`** folder, not the source folder or a ZIP file.
 5. Pin **Local Overview** using Chrome's Extensions menu if desired.
-6. Open the extension popup, select **Settings**, and click **Refresh models**. Choose an installed local model.
-7. Open a fresh supported Google Search page and select **Local AI**. Use **Generate** if automatic generation is disabled.
+6. Open the extension popup, select **Settings**, and choose an installed local model. Use **Retry** to refresh the list if needed.
+7. Open a fresh supported Google Search page. The **Local AI Overview** panel appears automatically. Use **Generate overview** if automatic generation is disabled or interaction is required.
 
 If Ollama blocks the connection, allow the extension's exact origin using `OLLAMA_ORIGINS`. The origin and platform-specific setup are described in [docs/OLLAMA.md](docs/OLLAMA.md). Changing environment variables requires restarting Ollama.
 
@@ -84,20 +88,18 @@ After rebuilding, click **Reload** on the extension card in `chrome://extensions
 
 ## Using Local Overview
 
-**Google** shows Google's original overview when detected. When none is detected, the switch explains that Google has no available overview. Selecting Google does not trigger generation.
-
-**Local AI** displays the local panel. Select a model, generate or regenerate a response, stop generation, copy the answer, or open settings. Moving to another query, switching back to Google, disabling the extension, or changing generation settings cancels the current request. The extension keeps completed answers only in the current page's memory; it does not create a persistent search or response history.
+The local panel is available whenever the extension is enabled on a supported search page. Google's own overview and controls remain available independently; Local Overview does not hide or replace them. Select a model, generate or regenerate a response, stop generation, copy the answer, or open settings. Moving to another query, disabling the extension, or changing generation settings cancels the current request. The extension keeps completed answers only in the current page's memory; it does not create a persistent search or response history.
 
 Grounding is **off by default**. Turn it on in settings to supply a small number of visible search results to the model. Source cards show the collected pages; inline numeric citations link only to those pages. Snippets are incomplete and models can misread them. Citation presence is not a guarantee that a claim is supported—open the original sources for decisions that matter. Without usable context, the panel identifies the answer as based on model knowledge rather than current search evidence.
 
-Settings let you choose a preferred mode, remember mode changes, require an explicit interaction before generation, and control regeneration on new queries. A manual **Generate** action remains available when automation is off. Appearance changes update open interfaces through Chrome storage.
+Settings let you generate automatically when the panel opens, require an explicit **Generate overview** or **Regenerate** action, and control automatic generation on new queries. The popup's enable switch controls only Local Overview. Appearance changes update open interfaces through Chrome storage.
 
 ## Development
 
 ```sh
 npm ci
 npm run dev           # Watch TypeScript bundles; reload the extension after edits
-npm run check         # Strict TypeScript validation
+npm run check         # TypeScript and formatting checks
 npm test              # Mocked API, streaming, settings, and DOM tests
 npm run build         # Build the unpacked extension into dist/
 npm run verify        # Static checks, unit tests, build, and expected-file checks
@@ -113,7 +115,7 @@ npm run test:browser
 
 Browser tests use representative search fixtures and mocked Ollama responses. The [test guide](docs/TESTING.md) separates these checks from live Google and real-model testing. Never run test scenarios against a personal browser profile with sensitive tabs.
 
-For 0.1.0, a separate browser check also streamed a genuine local Ollama model through the built extension against a search fixture. Live Google testing encountered an automated-traffic challenge and remains unverified. See the [validation report](docs/VALIDATION.md) for measured results and their limits.
+For 0.1.0, a separate browser check also streamed a genuine local Ollama model through the built extension against a search fixture. The maintainer reported that their manual live test worked. The automated live Google attempt encountered a traffic challenge; it did not establish live compatibility. See the [validation report](docs/VALIDATION.md) for the distinct results and their limits.
 
 The build bundles local code with esbuild. There are no runtime npm dependencies, CDN assets, external font requests, or remote executable scripts. Generated files, dependencies, test outputs, and local configuration are excluded from Git.
 
@@ -122,8 +124,8 @@ The build bundles local code with esbuild. There are no runtime npm dependencies
 ```text
 src/
   background/   Privileged API requests and extension message validation
-  content/      Search integration, reversible native hiding, and local UI
-  google/       Native overview detection, placement, and visible result context
+  content/      Search lifecycle, local overview UI, and generation controls
+  google/       Safe panel placement and visible result context
   ollama/       Ollama client, streaming parser, and grounded prompts
   pages/        Popup and options page logic and styling
   shared/       Settings, types, endpoint rules, and messaging contracts
@@ -138,20 +140,19 @@ See [architecture](docs/ARCHITECTURE.md) for lifecycle, security, and Google lay
 
 ## Troubleshooting
 
-| Symptom                                       | What to try                                                                                                                                                                                                              |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Ollama is offline**                         | Start Ollama, verify the endpoint in Settings, then click Retry/Refresh models. The usual endpoint is `http://localhost:11434`.                                                                                          |
-| Access denied / HTTP 403                      | Add the exact `chrome-extension://EXTENSION_ID` origin to `OLLAMA_ORIGINS` and restart Ollama. See [local access configuration](docs/OLLAMA.md).                                                                         |
-| No models available                           | Run `ollama list`; download a local chat model, then refresh. Cloud-backed models are intentionally excluded.                                                                                                            |
-| The selected model disappeared                | Refresh models and choose an installed one. Deleted or renamed models are not silently substituted for an explicit selection.                                                                                            |
-| The model cannot chat                         | Choose a chat model. Embedding-only or unsupported models may be installed but cannot serve `/api/chat`.                                                                                                                 |
-| Slow start, timeout, or out-of-memory error   | Try a smaller model, close other GPU-heavy apps, shorten the response, and retry. Preload the model with `ollama run MODEL_NAME` before generating in Chrome; cold model loading can exceed the first-response deadline. |
-| A stream stops unexpectedly                   | Keep any partial response, then Retry/Regenerate. Interrupted requests are not silently resumed or submitted again.                                                                                                      |
-| No switch on a Google page                    | Confirm the domain and regular/Web search tab, enable the extension, reload it in `chrome://extensions`, then reload the search page. A changed Google layout may require a detector update.                             |
-| Google's overview remains visible in Local AI | Detection is conservative to protect search results. Report a redacted DOM fixture and layout details; avoid hiding broad page containers.                                                                               |
-| A local HTTPS endpoint fails                  | Use HTTP on loopback, or configure a certificate Chrome trusts. The extension does not bypass certificate errors.                                                                                                        |
+| Symptom                                     | What to try                                                                                                                                                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Ollama is offline**                       | Start Ollama, verify the endpoint in Settings, then click Retry/Refresh models. The usual endpoint is `http://localhost:11434`.                                                                                          |
+| Access denied / HTTP 403                    | Add the exact `chrome-extension://EXTENSION_ID` origin to `OLLAMA_ORIGINS` and restart Ollama. See [local access configuration](docs/OLLAMA.md).                                                                         |
+| No models available                         | Run `ollama list`; download a local chat model, then refresh. Cloud-backed models are intentionally excluded.                                                                                                            |
+| The selected model disappeared              | Refresh models and choose an installed one. Deleted or renamed models are not silently substituted for an explicit selection.                                                                                            |
+| The model cannot chat                       | Choose a chat model. Embedding-only or unsupported models may be installed but cannot serve `/api/chat`.                                                                                                                 |
+| Slow start, timeout, or out-of-memory error | Try a smaller model, close other GPU-heavy apps, shorten the response, and retry. Preload the model with `ollama run MODEL_NAME` before generating in Chrome; cold model loading can exceed the first-response deadline. |
+| A stream stops unexpectedly                 | Keep any partial response, then Retry/Regenerate. Interrupted requests are not silently resumed or submitted again.                                                                                                      |
+| No Local AI panel on a Google page          | Confirm the domain and regular/Web search tab, enable the extension, reload it in `chrome://extensions`, then reload the search page. A changed Google layout may require a placement update.                            |
+| A local HTTPS endpoint fails                | Use HTTP on loopback, or configure a certificate Chrome trusts. The extension does not bypass certificate errors.                                                                                                        |
 
-Google uses changing, region-dependent markup and does not expose a stable AI Overview integration API. The extension uses conservative semantic detection and fallback placement. Some language/layout variants may leave Google's overview visible; ordinary search should continue to work. See [known limitations](docs/ARCHITECTURE.md#limitations).
+Google uses changing, region-dependent markup. The extension uses safe result-container placement and a fallback when the expected container is unavailable. Google's AI Overview remains visible independently of the local panel. See [known limitations](docs/ARCHITECTURE.md#limitations).
 
 Generation allows **25 seconds for initial response headers**, **120 seconds without incoming data**, and **10 minutes overall**. Model-list checks have a 10-second overall deadline. Chrome can also terminate a slow or interrupted service worker. A timeout is reported with a retry action; it is not treated as a completed answer.
 
@@ -167,7 +168,7 @@ Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Before filing
 
 GitHub publishing is a separate maintainer action. Nothing in the build or CI scripts creates a repository, pushes changes, uploads secrets, or publishes a release.
 
-The [publishing guide](docs/PUBLISHING.md) contains exact commands for the approval step, including repository and remote checks.
+The [publishing guide](docs/PUBLISHING.md) describes repository, release, and remote checks for maintainers.
 
 ## License
 

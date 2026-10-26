@@ -4,23 +4,23 @@ Validation recorded **26 October 2026**, on Windows with Chromium **156.0.8078.4
 
 ## Automated checks
 
-| Check                                                     | Result                                                                                                                                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Strict TypeScript (`npm run check`)                       | Passed.                                                                                                                                                                        |
-| Unit tests (`npm test`)                                   | **111 passed** at the latest recorded run, covering mocked API/NDJSON behavior, cancellation, input and endpoint validation, settings, and representative Google DOM behavior. |
-| Production build and expected extension-file verification | Passed; complete Manifest V3 output generated in `dist/`.                                                                                                                      |
-| Browser integration (`npm run test:browser`)              | **5 passed**, using the built extension in a disposable Chromium profile.                                                                                                      |
-| Dependency audit (`npm audit`)                            | **0 reported vulnerabilities** at validation time. This is a dependency advisory check, not a security certification.                                                          |
+| Check                                                     | Result                                                                                                                                                                                 |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Strict TypeScript (`npm run check`)                       | Passed.                                                                                                                                                                                |
+| Unit tests (`npm test`)                                   | **99 passed** for the local-only release revision, covering mocked API/NDJSON behavior, cancellation, input and endpoint validation, settings, and representative Google DOM behavior. |
+| Production build and expected extension-file verification | Passed; complete Manifest V3 output generated in `dist/`.                                                                                                                              |
+| Browser integration (`npm run test:browser`)              | **5 passed**, using the built extension in a disposable Chromium profile.                                                                                                              |
+| Dependency audit (`npm audit`)                            | **0 reported vulnerabilities** at validation time. This is a dependency advisory check, not a security certification.                                                                  |
 
-The browser suite loads the actual unpacked extension, including its service worker and content script. It uses real Chrome APIs and HTTP requests to a loopback Ollama mock. Search pages are representative fixtures served at supported test URLs, and model responses are controlled. It verifies streaming UTF-8 text, model switching, source-link restrictions, native visibility and controls restoration, delayed/missing native panels, dark appearance, duplicate prevention, disable, cancellation, navigation, offline/empty/error/interrupted recovery, and extension-page settings behavior.
+The browser suite loads the actual unpacked extension, including its service worker and content script. It uses real Chrome APIs and HTTP requests to a loopback Ollama mock. Search pages are representative fixtures served at supported test URLs, and model responses are controlled. It verifies streaming UTF-8 text, model switching, source-link restrictions, unchanged native Google content and controls, delayed/missing native panels, dark appearance, duplicate prevention, disable, cancellation, navigation, offline/empty/error/interrupted recovery, and extension-page settings behavior.
 
-The light and dark search screenshots in [screenshots](screenshots/README.md) come from this built-extension browser run. Popup/options screenshots use their own page-level mocks as documented there.
+All four [screenshots](screenshots/README.md) come from the actual unpacked extension with real Chrome APIs and controlled loopback HTTP model discovery and responses.
 
 ## Live Google attempt
 
-A clean Chromium session attempted a real `google.com.au` search. Google returned an automated-traffic challenge, so the extension could not be evaluated against an ordinary live results page in that session. **Live Google Search compatibility has not passed validation.** No challenge bypass was attempted.
+A clean Chromium session attempted a real `google.com.au` search during the initial build. Google returned an automated-traffic challenge, so that automated session did not evaluate an ordinary live results page. No challenge bypass was attempted.
 
-Native Google AI Overview layouts are dynamic and region/language dependent. Fixture success demonstrates the tested integration behavior; it does not guarantee detection on every current Google layout. Use [the manual checklist](TESTING.md) before publishing a compatibility claim.
+The maintainer then reported that their manual test of the initial build worked correctly. That is user-reported live validation, distinct from the automated fixture results. The release revision removes the provider selector and displays only the local panel while leaving Google's native overview untouched. Google layouts remain region/language dependent; one reported working setup does not establish every layout. Use [the manual checklist](TESTING.md) for additional coverage.
 
 ## Local Ollama checks
 

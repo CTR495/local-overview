@@ -2,9 +2,9 @@
 
 ## 0.1.0 — 2026-10-26
 
-First local release preparation. Public GitHub publication is a separate maintainer approval step.
+First release package, prepared for public publication.
 
-- Added Google/Local AI switching with reversible native overview visibility and fallback placement.
+- Added a Local AI Overview panel with safe fallback placement alongside Google's original overview and results.
 - Added local Ollama model discovery, streamed generation, cancellation, retry, and reported performance statistics.
 - Added optional visible-result grounding with controlled source links.
 - Added popup and options pages, persistent settings, themes, and motion preferences.

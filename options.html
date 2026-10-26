@@ -96,8 +96,8 @@
           </div>
           <div class="setting-row">
             <div>
-              <label for="autoGenerate">Generate when selecting Local AI</label>
-              <p class="muted small">Start an answer when you switch to Local AI.</p>
+              <label for="autoGenerate">Generate automatically</label>
+              <p class="muted small">Start an answer when the local overview opens on a search.</p>
             </div>
             <label class="switch"><input id="autoGenerate" type="checkbox" /><span></span></label>
           </div>
@@ -207,39 +207,8 @@
           </header>
           <div class="setting-row">
             <div>
-              <label for="mode">Current overview mode</label>
-              <p class="muted small">Updates open Google Search tabs immediately.</p>
-            </div>
-            <select id="mode">
-              <option value="google">Google</option>
-              <option value="local">Local AI</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <div>
-              <label for="preferredMode">Preferred overview mode</label>
-              <p class="muted small">
-                Used for a new page when remembering the previous mode is off.
-              </p>
-            </div>
-            <select id="preferredMode">
-              <option value="google">Google</option>
-              <option value="local">Local AI</option>
-            </select>
-          </div>
-          <div class="setting-row">
-            <div>
-              <label for="rememberMode">Remember previous mode</label>
-              <p class="muted small">Keep your last choice across Google searches.</p>
-            </div>
-            <label class="switch"><input id="rememberMode" type="checkbox" /><span></span></label>
-          </div>
-          <div class="setting-row">
-            <div>
               <label for="interactionOnly">Generate only after interaction</label>
-              <p class="muted small">
-                Require selecting Local AI, Generate, or Regenerate on each search.
-              </p>
+              <p class="muted small">Require clicking Generate or Regenerate on each search.</p>
             </div>
             <label class="switch"
               ><input id="interactionOnly" type="checkbox" /><span></span
@@ -249,8 +218,7 @@
             <div>
               <label for="autoRegenerate">Generate on a new search</label>
               <p class="muted small">
-                When Local AI is active. Also requires automatic generation<br />and “Generate only
-                after interaction” to be off.
+                Requires automatic generation and “Generate only after interaction” to be off.
               </p>
             </div>
             <label class="switch"><input id="autoRegenerate" type="checkbox" /><span></span></label>

@@ -20,7 +20,7 @@ All four [screenshots](screenshots/README.md) come from the actual unpacked exte
 
 A clean Chromium session attempted a real `google.com.au` search during the initial build. Google returned an automated-traffic challenge, so that automated session did not evaluate an ordinary live results page. No challenge bypass was attempted.
 
-The maintainer then reported that their manual test of the initial build worked correctly. That is user-reported live validation, distinct from the automated fixture results. The release revision removes the provider selector and displays only the local panel while leaving Google's native overview untouched. Google layouts remain region/language dependent; one reported working setup does not establish every layout. Use [the manual checklist](TESTING.md) for additional coverage.
+The maintainer reported successful manual tests of both the initial build and the final local-only revision. That is user-reported live validation, distinct from the automated fixture results. The release revision removes the provider selector and displays only the local panel while leaving Google's native overview untouched. Google layouts remain region/language dependent; one reported working setup does not establish every layout. Use [the manual checklist](TESTING.md) for additional coverage.
 
 ## Local Ollama checks
 

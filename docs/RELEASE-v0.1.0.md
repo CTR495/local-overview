@@ -19,7 +19,7 @@ Allow the extension's exact `chrome-extension://` origin in `OLLAMA_ORIGINS` if 
 
 ### Validation and limits
 
-The release source includes unit tests, real Chromium extension tests with search fixtures and a loopback Ollama mock, build verification, and a dependency audit. A genuine local Ollama model also streamed successfully through the unpacked extension on a search fixture. The maintainer reported a successful manual live test of the initial build. The final local-only interface is covered separately by the automated release checks; see the [validation report](https://github.com/CTR495/local-overview/blob/main/docs/VALIDATION.md).
+The release source includes 99 passing unit tests, five passing Chromium extension tests with search fixtures and a loopback Ollama mock, build verification, and a dependency audit. A genuine local Ollama model also streamed successfully through the unpacked extension on a search fixture. The maintainer reported successful manual live tests of the initial build and final local-only revision; see the [validation report](https://github.com/CTR495/local-overview/blob/main/docs/VALIDATION.md).
 
 Supported initially: desktop Chrome 120+ and regular/Web search on `google.com` and `google.com.au`. Google layout changes can affect placement and source collection. Cold model loading can exceed Chrome's initial-response window; preload the model with `ollama run MODEL_NAME` or try a smaller model.
 

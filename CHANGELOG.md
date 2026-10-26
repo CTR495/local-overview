@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2026-10-26
 
-First release package, prepared for public publication.
+First public release.
 
 - Added a Local AI Overview panel with safe fallback placement alongside Google's original overview and results.
 - Added local Ollama model discovery, streamed generation, cancellation, retry, and reported performance statistics.

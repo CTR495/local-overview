@@ -1,6 +1,6 @@
 # Publishing and releases
 
-The intended canonical repository is `CTR495/local-overview`; public repository and release publication are pending. Repository creation, pushes, and release publication are maintainer actions; build and test commands do not publish anything. The maintainer authorized the first public repository and `v0.1.0` release after reviewing the local build.
+The canonical public repository is [CTR495/local-overview](https://github.com/CTR495/local-overview). Repository creation, pushes, and release publication are maintainer actions; build and test commands do not publish anything. The following instructions describe the release workflow; inspect existing remotes and releases before using them.
 
 Before publishing, run `npm run verify` and `npm run test:browser`, review `git status`, and confirm that dependencies, build outputs, browser profiles, local paths, credentials, and personal search fixtures are excluded. Keep honest validation notes in the release description.
 

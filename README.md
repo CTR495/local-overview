@@ -8,8 +8,6 @@ Version **0.1.0** · Manifest V3 · TypeScript · No frontend framework · MIT
 
 [Source repository](https://github.com/CTR495/local-overview) · [Release downloads](https://github.com/CTR495/local-overview/releases)
 
-Repository and release publication are pending; these are the intended public URLs.
-
 This project is unofficial and is not affiliated with, endorsed by, or sponsored by Google or Ollama.
 
 ## Features

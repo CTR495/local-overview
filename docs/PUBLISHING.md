@@ -2,6 +2,8 @@
 
 The canonical public repository is [CTR495/local-overview](https://github.com/CTR495/local-overview). Repository creation, pushes, and release publication are maintainer actions; build and test commands do not publish anything. The following instructions describe the release workflow; inspect existing remotes and releases before using them.
 
+The working source is **0.1.1, local and unpublished**. Publishing this update is not authorized. The existing public [v0.1.0 release](https://github.com/CTR495/local-overview/releases/tag/v0.1.0) remains unchanged.
+
 Before publishing, run `npm run verify` and `npm run test:browser`, review `git status`, and confirm that dependencies, build outputs, browser profiles, local paths, credentials, and personal search fixtures are excluded. Keep honest validation notes in the release description.
 
 ## GitHub CLI
@@ -48,7 +50,7 @@ Verify the repository URL in a signed-out browser and confirm its visibility is 
 
 Run `npm run package` to produce a ZIP in `artifacts/`. Inspect its file list and load an extracted copy in a disposable Chrome profile. The ZIP contains the built extension, license, and privacy policy; the source repository remains the canonical contribution surface.
 
-For the approved first release, confirm that the reviewed commit is on `main`, the remote is the intended public repository, and the tag/release does not already exist. Then run:
+The first public release is already published. The following commands record its workflow; do not rerun creation against the existing tag or replace its asset:
 
 ```sh
 gh release create v0.1.0 artifacts/local-overview-0.1.0.zip --repo CTR495/local-overview --target main --title "Local Overview v0.1.0" --notes-file docs/RELEASE-v0.1.0.md

@@ -1,5 +1,10 @@
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { deflateRawSync } from 'node:zlib';
+const packageInfo = JSON.parse(await readFile('package.json', 'utf8'));
+const manifest = JSON.parse(await readFile('dist/manifest.json', 'utf8'));
+if (!/^\d+\.\d+\.\d+$/.test(packageInfo.version) || manifest.version !== packageInfo.version)
+  throw new Error('Build the matching extension version before packaging.');
+const archivePath = `artifacts/local-overview-${packageInfo.version}.zip`;
 // Minimal deterministic ZIP writer; distributable contains only the built extension.
 function crc32(data) {
   let c = 0xffffffff;
@@ -57,5 +62,5 @@ end.writeUInt16LE(entries.length / 2, 10);
 end.writeUInt32LE(directory.length, 12);
 end.writeUInt32LE(offset, 16);
 await mkdir('artifacts', { recursive: true });
-await writeFile('artifacts/local-overview-0.1.0.zip', Buffer.concat([...parts, directory, end]));
-console.log('Created artifacts/local-overview-0.1.0.zip');
+await writeFile(archivePath, Buffer.concat([...parts, directory, end]));
+console.log(`Created ${archivePath}`);

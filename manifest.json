@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Local Overview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Add local Ollama AI summaries alongside Google Search results. Independent, unofficial, and private by design.",
   "minimum_chrome_version": "120",
   "permissions": ["storage"],

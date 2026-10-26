@@ -92,7 +92,7 @@ If the list is empty, run `ollama list`, download a local chat model, and retry.
 
 The client also limits generation to **120 seconds without incoming data** and **10 minutes overall**. Model-list checks have a 10-second overall timeout. Chrome has its own worker/fetch lifetime rules, so heartbeats cannot guarantee that a slow request survives. A generation can fail when a listed model does not support chat, the hardware runs out of memory, or the browser interrupts the worker. Partial text is retained and a fresh Retry/Regenerate action is offered.
 
-The extension supports another port on exactly `localhost` or `127.0.0.1`, using HTTP or HTTPS. HTTPS needs a certificate Chrome already trusts. IPv6 loopback, custom DNS names, remote machines, URL paths, credentials, and redirects are intentionally not accepted in 0.1.0.
+The extension supports another port on exactly `localhost` or `127.0.0.1`, using HTTP or HTTPS. HTTPS needs a certificate Chrome already trusts. IPv6 loopback, custom DNS names, remote machines, URL paths, credentials, and redirects are intentionally not accepted.
 
 ## Primary references
 

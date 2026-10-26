@@ -4,7 +4,9 @@
 
 Local Overview is an independent Chrome extension that adds a **Local AI Overview** to Google Search using a model installed in [Ollama](https://ollama.com/). The local panel appears alongside Google's original results and AI Overview, which stay available and unchanged.
 
-Version **0.1.0** · Manifest V3 · TypeScript · No frontend framework · MIT
+Version **0.1.1 — local, unreleased** · Manifest V3 · TypeScript · No frontend framework · MIT
+
+This working copy contains the next update and has not been pushed to GitHub or published. The current public release is [v0.1.0](https://github.com/CTR495/local-overview/releases/tag/v0.1.0).
 
 [Source repository](https://github.com/CTR495/local-overview) · [Release downloads](https://github.com/CTR495/local-overview/releases)
 
@@ -13,6 +15,8 @@ This project is unofficial and is not affiliated with, endorsed by, or sponsored
 ## Features
 
 - A dedicated Local AI panel that leaves Google's original AI Overview and search results untouched.
+- An open answer layout without an enclosing card, repeated answer heading, or visible connection-status line.
+- Direct topic answers, a gentle streaming reveal, and restrained blue emphasis for important phrases.
 - Local generation works whether or not Google provides an overview for the query.
 - Incremental Ollama streaming, cancellation, regeneration, and installed-model selection.
 - Optional grounding in a limited set of visible result titles, URLs, and snippets; no extra result-page requests.
@@ -86,7 +90,9 @@ After rebuilding, click **Reload** on the extension card in `chrome://extensions
 
 ## Using Local Overview
 
-The local panel is available whenever the extension is enabled on a supported search page. Google's own overview and controls remain available independently; Local Overview does not hide or replace them. Select a model, generate or regenerate a response, stop generation, copy the answer, or open settings. Moving to another query, disabling the extension, or changing generation settings cancels the current request. The extension keeps completed answers only in the current page's memory; it does not create a persistent search or response history.
+The local answer is available whenever the extension is enabled on a supported search page. It uses an open layout with Local Overview branding, so the answer can sit naturally in the results without being mistaken for Google's own content. Google's overview and controls remain available independently; Local Overview does not hide or replace them. Select a model, generate or regenerate a response, stop generation, copy the answer, or open settings. Moving to another query, disabling the extension, or changing generation settings cancels the current request. The extension keeps completed answers only in the current page's memory; it does not create a persistent search or response history.
+
+The prompt asks the model to answer the topic directly. For a short search such as “youtube,” it should explain YouTube instead of discussing the query or source format. Models can still disregard instructions. Short important phrases may receive blue emphasis; new text fades into view as it streams. System and extension reduced-motion preferences suppress the reveal effects.
 
 Grounding is **off by default**. Turn it on in settings to supply a small number of visible search results to the model. Source cards show the collected pages; inline numeric citations link only to those pages. Snippets are incomplete and models can misread them. Citation presence is not a guarantee that a claim is supported—open the original sources for decisions that matter. Without usable context, the panel identifies the answer as based on model knowledge rather than current search evidence.
 

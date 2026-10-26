@@ -4,15 +4,15 @@ Local Overview is a Manifest V3 extension built from TypeScript into local JavaS
 
 ## Components and trust boundaries
 
-| Component          | Responsibility                                                                                                                                            |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Content script     | Read supported search URL, maintain one overview interface, collect optional visible result context, coordinate generation, and cancel stale requests.    |
-| Google integration | Find safe panel placement, observe relevant result-container changes, and collect bounded visible result context without changing native content.         |
-| Local UI           | Render original branding in a Shadow DOM, expose accessible controls, and display text, controlled citations, and actual statistics.                      |
-| Service worker     | Validate extension message senders and inputs; read persisted settings; make loopback API requests; forward deltas, completion, errors, and cancellation. |
-| Ollama client      | Fixed API routes, model locality checks, bounded parsing, UTF-8 NDJSON decoding, timeout and abort handling.                                              |
-| Popup/options      | Inspect connection and installed models, update shared settings, and explain local data flow.                                                             |
-| Shared modules     | Typed settings, defaults, validated endpoint rules, supported Google hosts, protocol messages, and source/statistic types.                                |
+| Component          | Responsibility                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Content script     | Read supported search URL, maintain one overview interface, collect optional visible result context, coordinate generation, and cancel stale requests.             |
+| Google integration | Find safe panel placement, observe relevant result-container changes, and collect bounded visible result context without changing native content.                  |
+| Local UI           | Render original branding and an open answer layout in a Shadow DOM; expose accessible controls and display safe text, controlled citations, and actual statistics. |
+| Service worker     | Validate extension message senders and inputs; read persisted settings; make loopback API requests; forward deltas, completion, errors, and cancellation.          |
+| Ollama client      | Fixed API routes, model locality checks, bounded parsing, UTF-8 NDJSON decoding, timeout and abort handling.                                                       |
+| Popup/options      | Inspect connection and installed models, update shared settings, and explain local data flow.                                                                      |
+| Shared modules     | Typed settings, defaults, validated endpoint rules, supported Google hosts, protocol messages, and source/statistic types.                                         |
 
 Google page scripts cannot select the endpoint or call the API through a public bridge. The content script runs in Chrome's isolated world. Network destinations come from validated extension settings, not page text or model output. Requests omit credentials and reject redirects.
 
@@ -41,7 +41,11 @@ This follows [Chrome's service-worker lifecycle guidance](https://developer.chro
 
 Grounding uses a bounded set of currently visible organic results. It sends their titles, validated HTTP/HTTPS URLs, and snippets as untrusted source data. No linked pages or additional search pages are fetched. The system prompt distinguishes the question from evidence and instructs the model to cite only supplied numeric source IDs.
 
-The UI does not render raw model HTML. It constructs text nodes and controlled citation anchors whose destinations come from the generation's validated source list. Unknown references remain non-clickable. Sources show what was supplied; their presence does not prove every generated sentence is supported. Ungrounded answers carry a model-knowledge notice.
+The model is instructed to answer the search topic directly, without narrating the query, evidence list, or message format. Evidence remains untrusted data and can never choose extension actions or network destinations. Prompt instructions improve behavior but cannot guarantee model compliance.
+
+The UI does not render raw model HTML. It constructs text nodes, narrowly supported emphasis spans, and controlled citation anchors whose destinations come from the generation's validated source list. Unknown references remain non-clickable. Sources show what was supplied; their presence does not prove every generated sentence is supported. Ungrounded answers carry a model-knowledge notice.
+
+The search-page answer area has no enclosing card or repeated answer/status heading. Its Local Overview branding remains distinct from Google's native overview. New streaming text uses a restrained opacity/blur reveal, and short model-emphasized phrases use a blue visual treatment. Existing text should stay stable as later chunks arrive. Reduced-motion preferences disable animation while retaining readable emphasis and generation controls.
 
 ## Settings
 

@@ -19,7 +19,7 @@ let behavior: 'normal' | 'slow' | 'error' | 'offline' | 'empty' | 'broken' = 'no
 let unsafeOutput = false;
 const prompts: Record<string, unknown>[] = [];
 const fixture = (native = true, dark = false) =>
-  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Search fixture</title><style>body{margin:0;background:${dark ? '#202124' : '#fff'};color:${dark ? '#e8eaed' : '#202124'};font:14px Arial}header{height:90px;border-bottom:1px solid #8883;padding:25px 32px;box-sizing:border-box}input{margin-left:45px;padding:13px 25px;border:1px solid #8885;border-radius:30px;width:560px;background:transparent;color:inherit}main{margin:30px 30px 50px 180px;max-width:700px}a{color:${dark ? '#b5a4ff' : '#4030aa'};text-decoration:none}h3{font-size:20px;font-weight:400;margin:8px 0}article{margin:25px 0;line-height:1.65}h2{font-size:19px}</style></head><body><header><strong>Search fixture</strong><input aria-label="Search" name="q" value="why is the sky blue"></header><main id="search">${native ? '<section data-ai-overview="true" style="display: grid"><h2>AI Overview</h2><p>Representative native overview. Google’s original answer and controls remain available alongside Local Overview.</p><button onclick="this.textContent=\'Expanded native overview\'">Show more</button></section>' : ''}<div id="rso"><article><a href="https://science.nasa.gov/earth/why-is-the-sky-blue/"><h3>Why is the sky blue? — NASA Science</h3></a><p>Air molecules scatter shorter wavelengths of sunlight more strongly. Blue light is scattered in all directions.</p></article><article><a href="https://www.noaa.gov/jetstream/atmosphere/blue-sky"><h3>Sunlight and our atmosphere — NOAA</h3></a><p>Light is scattered by gases and particles in the atmosphere. The sky changes color with the Sun’s angle.</p></article></div></main></body></html>`;
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Search fixture</title><style>body{margin:0;background:${dark ? '#202124' : '#fff'};color:${dark ? '#e8eaed' : '#202124'};font:14px Arial}header{height:90px;border-bottom:1px solid #8883;padding:25px 32px;box-sizing:border-box}input{margin-left:45px;padding:13px 25px;border:1px solid #8885;border-radius:30px;width:560px;background:transparent;color:inherit}main{margin:30px 30px 50px 180px;max-width:700px}a{color:${dark ? '#b5a4ff' : '#4030aa'};text-decoration:none}h3{font-size:20px;font-weight:400;margin:8px 0}article{margin:25px 0;line-height:1.65}h2{font-size:19px}@media(max-width:700px){main{margin:24px 16px}header{padding:24px 16px}header input{display:none}}</style></head><body><header><strong>Search fixture</strong><input aria-label="Search" name="q" value="why is the sky blue"></header><main id="search">${native ? '<section data-ai-overview="true" style="display: grid"><h2>AI Overview</h2><p>Representative native overview. Google’s original answer and controls remain available alongside Local Overview.</p><button onclick="this.textContent=\'Expanded native overview\'">Show more</button></section>' : ''}<div id="rso"><article><a href="https://science.nasa.gov/earth/why-is-the-sky-blue/"><h3>Why is the sky blue? — NASA Science</h3></a><p>Air molecules scatter shorter wavelengths of sunlight more strongly. Blue light is scattered in all directions.</p></article><article><a href="https://www.noaa.gov/jetstream/atmosphere/blue-sky"><h3>Sunlight and our atmosphere — NOAA</h3></a><p>Light is scattered by gases and particles in the atmosphere. The sky changes color with the Sun’s angle.</p></article></div></main></body></html>`;
 async function configure(patch: Record<string, unknown>) {
   await worker.evaluate(async (value) => {
     await chrome.storage.local.set(value);
@@ -90,7 +90,10 @@ test.beforeAll(async () => {
       let finished = false;
       const begin =
         JSON.stringify({
-          message: { content: 'The sky appears blue because air scatters sunlight. ☀ ' },
+          message: {
+            content:
+              'The sky appears **blue** because air molecules scatter shorter wavelengths of sunlight more strongly. ☀ This blue light reaches our eyes from across the sky [1].\n\nThis is called **Rayleigh',
+          },
           done: false,
         }) + '\n';
       const bytes = Buffer.from(begin);
@@ -107,7 +110,7 @@ test.beforeAll(async () => {
           const final = {
             model: data.model,
             message: {
-              content: `Shorter blue wavelengths scatter more strongly [1].\n\n${unsafeOutput ? '<img src=x onerror=alert(1)> [999]' : 'This is called Rayleigh scattering. Near sunset, sunlight passes through more atmosphere, leaving more of the warmer colors.'}`,
+              content: ` scattering**. ${unsafeOutput ? '<img src=x onerror=alert(1)> [999]' : 'Near sunset, sunlight passes through more atmosphere, leaving more of the warmer colors.'}`,
             },
             done: true,
             eval_count: 48,
@@ -118,7 +121,7 @@ test.beforeAll(async () => {
           finished = true;
           res.end(JSON.stringify(final) + '\n');
         },
-        behavior === 'slow' ? 15_000 : 750,
+        behavior === 'slow' ? 15_000 : 1_000,
       );
       res.on('close', () => {
         clearTimeout(timer);
@@ -158,6 +161,7 @@ test.beforeEach(async () => {
     interactionOnly: false,
     autoRegenerate: true,
     theme: 'auto',
+    reducedMotion: false,
     showStats: true,
   });
 });
@@ -197,7 +201,15 @@ test('real MV3 transport streams, switches models, cites sources, and leaves Goo
   await host.locator('.generate').click();
   await expect(host.locator('.answer')).toContainText('☀');
   await expect(host.getByRole('button', { name: 'Stop generating' })).toBeVisible();
+  const firstReveal = await host.locator('.answer-reveal').first().elementHandle();
   await expect(host.getByRole('button', { name: '↻ Regenerate' })).toBeVisible();
+  expect(await firstReveal?.evaluate((node) => node.isConnected)).toBe(true);
+  await expect(host.locator('.answer strong.emphasis')).toHaveText(['blue', 'Rayleigh scattering']);
+  await expect(host.locator('.answer')).not.toContainText('**');
+  await expect(host.locator('.eyebrow')).toHaveCount(0);
+  await expect(host.locator('.card')).toHaveCSS('border-top-width', '0px');
+  await expect(host.locator('.card')).toHaveCSS('box-shadow', 'none');
+  await expect(host.locator('.card')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(host.locator('.answer a')).toHaveAttribute(
     'href',
     'https://science.nasa.gov/earth/why-is-the-sky-blue/',
@@ -244,6 +256,8 @@ test('missing/delayed native overview, dark theme, duplicate prevention and disa
     );
   await page.waitForTimeout(500);
   await expect(host).toHaveCount(1);
+  await expect(host.locator('.card')).toHaveCSS('border-top-width', '0px');
+  await expect(host.locator('.card')).toHaveCSS('box-shadow', 'none');
   await mkdir('artifacts/screenshots', { recursive: true });
   await page.screenshot({
     path: 'artifacts/screenshots/google-dark.png',
@@ -339,4 +353,42 @@ test('actual extension popup and options save settings, restrict endpoints, and 
   expect(await options.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
     true,
   );
+});
+
+test('reveal effects respect reduced motion and the unboxed overview fits narrow windows', async () => {
+  behavior = 'slow';
+  const page = await search(false);
+  const host = page.locator('#local-overview-root');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 850 });
+    const model = host.getByLabel('Ollama model');
+    const settings = host.getByRole('button', { name: 'Open Local Overview settings' });
+    await expect(model).toBeVisible();
+    await expect(settings).toBeVisible();
+    for (const control of [model, settings]) {
+      const bounds = await control.boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      await control.focus();
+      await expect(control).toBeFocused();
+    }
+    expect(await host.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await host.locator('.generate').click();
+  await expect(host.locator('.answer')).toContainText('sky appears');
+  await expect(host.locator('.answer-reveal').first()).toHaveCSS('animation-name', 'none');
+  await expect(host.locator('.spark')).toHaveCSS('animation-name', 'none');
+  expect(await host.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await host.getByRole('button', { name: 'Stop generating' }).click();
+  await expect(host.locator('.notice')).toContainText('stopped');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await configure({ reducedMotion: true });
+  await host.locator('.generate').click();
+  await expect(host.locator('.answer-reveal').first()).toHaveCSS('animation-name', 'none');
+  await host.getByRole('button', { name: 'Stop generating' }).click();
 });

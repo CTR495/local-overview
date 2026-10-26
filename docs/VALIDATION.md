@@ -1,8 +1,37 @@
-# Version 0.1.0 validation
+# Version 0.1.1 local validation
+
+Version **0.1.1 is local and unpublished**. The new work changes the answer layout, streaming reveal and emphasis, direct-answer prompting, and version-aware packaging. It does not change the local-only endpoint policy or Google's native content.
+
+## Local revision checks
+
+Validation recorded **26 October 2026**. These results apply to the local 0.1.1 revision; the published 0.1.0 baseline is recorded separately below.
+
+| Check                                                                               | Result                                                                                                                                          |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Static checks, unit tests, build, and expected-file verification (`npm run verify`) | Passed; **112 unit tests across 10 files**.                                                                                                     |
+| Built-extension Chromium integration tests                                          | **6 passed**, including 320px/390px layouts, keyboard access, reduced motion, streaming/emphasis behavior, and unchanged native Google content. |
+| Local package                                                                       | Built `artifacts/local-overview-0.1.1.zip` with matching 0.1.1 package and manifest metadata.                                                   |
+| Documentation captures                                                              | All four screenshots refreshed from the actual unpacked extension using real Chrome APIs and a loopback HTTP Ollama mock.                       |
+
+The new browser checks exercise the open answer area, removed duplicate answer/status headings, stable streamed text, blue emphasis, and motion preferences. Search pages and mock model responses are controlled fixtures; these checks do not establish compatibility with every live Google layout.
+
+### Genuine local-model check
+
+A separate end-to-end check used the actual 0.1.1 extension in Chromium, a supported-URL search fixture for **“youtube,”** and the already installed **`llama3.2:latest`** model. It passed: the model answered the topic directly without query/JSON narration, “YouTube” appeared as an emphasized phrase, the answer area had a zero-width border and no shadow, and the duplicate heading was absent.
+
+This check used an isolated temporary Ollama server configured for the test extension's exact origin with `OLLAMA_NO_CLOUD=1`. The existing main Ollama server returned HTTP 403 for that test origin and was not reconfigured. The temporary server was cleaned up afterward, leaving the original service unchanged. This is a genuine local-model result on a search fixture, not a real-model result on a live Google page.
+
+Three additional prompt-only real-model smoke cases exercised direct-answer behavior and hostile source text. Those checks met their direct-answer and source-handling expectations, but one grounded response omitted the requested inline citation markers. Prompt compliance remains imperfect. The renderer restricts clickable citations to supplied source IDs; it cannot guarantee that the model cites every relevant claim or that an answer is factually supported or current.
+
+### Publication boundary
+
+Version 0.1.1 remains only on the local `work/v0.1.1` branch and has not been pushed or released. Public `main` and the published `v0.1.0` tag remain at commit `518b6be`.
+
+## Published version 0.1.0 baseline
 
 Validation recorded **26 October 2026**, on Windows with Chromium **156.0.8078.4**. These results distinguish the built extension's tested behavior from the live services it integrates with.
 
-## Automated checks
+### Automated checks
 
 | Check                                                     | Result                                                                                                                                                                                 |
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -16,13 +45,13 @@ The browser suite loads the actual unpacked extension, including its service wor
 
 All four [screenshots](screenshots/README.md) come from the actual unpacked extension with real Chrome APIs and controlled loopback HTTP model discovery and responses.
 
-## Live Google attempt
+### Live Google attempt
 
 A clean Chromium session attempted a real `google.com.au` search during the initial build. Google returned an automated-traffic challenge, so that automated session did not evaluate an ordinary live results page. No challenge bypass was attempted.
 
 The maintainer reported successful manual tests of both the initial build and the final local-only revision. That is user-reported live validation, distinct from the automated fixture results. The release revision removes the provider selector and displays only the local panel while leaving Google's native overview untouched. Google layouts remain region/language dependent; one reported working setup does not establish every layout. Use [the manual checklist](TESTING.md) for additional coverage.
 
-## Local Ollama checks
+### Local Ollama checks
 
 The existing local Ollama service responded to installed-model discovery with two local entries. Its chat endpoint rejected the extension's origin with HTTP 403. This confirms that an online model list alone does not establish permission to generate; configure the exact extension origin in `OLLAMA_ORIGINS` and restart Ollama.
 
@@ -34,7 +63,7 @@ The temporary server and model runner were cleaned up after the test; the pre-ex
 
 No personal queries, browser-profile files, server logs, local machine paths, or temporary endpoint details are included in this report.
 
-## Timeouts and remaining checks
+### Timeouts and remaining checks
 
 Generation uses a 25-second initial-response deadline, a 120-second incoming-data idle deadline, and a 10-minute overall limit. Model discovery has a 10-second overall deadline. Chrome may independently terminate workers or slow fetches. Preload the chosen model with `ollama run MODEL_NAME`, try a smaller model when necessary, and retry from the extension.
 

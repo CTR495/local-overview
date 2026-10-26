@@ -1,5 +1,6 @@
 import { readFile, access } from 'node:fs/promises';
 const manifest = JSON.parse(await readFile('dist/manifest.json', 'utf8'));
+const packageInfo = JSON.parse(await readFile('package.json', 'utf8'));
 for (const file of [
   'content.js',
   manifest.background.service_worker,
@@ -15,7 +16,7 @@ for (const file of [
   await access(`dist/${file}`);
 if (
   manifest.manifest_version !== 3 ||
-  manifest.version !== '0.1.0' ||
+  manifest.version !== packageInfo.version ||
   manifest.permissions.join() !== 'storage'
 )
   throw new Error('Unexpected manifest configuration.');

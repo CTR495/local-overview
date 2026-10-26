@@ -1,6 +1,7 @@
 import styles from './view.css';
 import type { GenerationStats, Model, Settings, Source } from '../shared/types';
 import { HOST_ID } from '../google/detector';
+import { AnswerRenderer } from './answer-renderer';
 const SPARK =
   '<svg class="spark" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M14 2c1.7 8 4 10.3 12 12-8 1.7-10.3 4-12 12C12.3 18 10 15.7 2 14 10 12.3 12.3 10 14 2Z"/><path d="M26 1c.7 3.3 1.7 4.3 5 5-3.3.7-4.3 1.7-5 5-.7-3.3-1.7-4.3-5-5 3.3-.7 4.3-1.7 5-5Z"/></svg>';
 const GEAR =
@@ -16,20 +17,21 @@ export class OverviewView {
   readonly host: HTMLElement;
   readonly shadow: ShadowRoot;
   private text = '';
-  private sources: Source[] = [];
   private frame = 0;
-  private busy = false;
+  private queuedText = '';
+  private answer: AnswerRenderer;
   constructor(actions: ViewActions) {
     this.host = document.createElement('div');
     this.host.id = HOST_ID;
     this.shadow = this.host.attachShadow({ mode: 'open' });
     // This template is constant. All search, model, and generated text uses textContent.
     this.shadow.innerHTML = `<style>${styles}</style>
-      <div class="toolbar"><div class="brand">${SPARK}<span>Local Overview</span></div><button class="settings" aria-label="Open Local Overview settings" title="Settings">${GEAR}</button></div>
-      <section class="card" aria-label="Local AI Overview"><header class="card-head"><div><div class="eyebrow">Local AI Overview</div><div class="connection"><span class="dot"></span><span class="status">Ready to connect</span></div></div><div class="model-row"><label for="lo-model">Model</label><select id="lo-model" aria-label="Ollama model"><option value="">Select a local model</option></select><button class="settings refresh" aria-label="Refresh installed models" title="Refresh models">↻</button></div></header>
-      <div class="body"><p class="grounding" data-grounded="false"></p><div class="empty"><h2 class="empty-title">A little perspective. Locally.</h2><p class="empty-text">Turn this search into a helpful overview using a model on your computer.</p></div><div class="skeleton" aria-hidden="true" hidden><i></i><i></i><i></i></div><div class="answer" dir="auto"></div><div class="notice" hidden role="status"></div><details class="sources" hidden open><summary>Search context</summary><div class="source-grid"></div></details><details class="stats" hidden><summary>Generation statistics</summary><dl></dl></details></div>
-      <footer class="foot"><div class="actions"><button class="button primary generate">Generate overview</button><button class="button stop" hidden>Stop generating</button><button class="button copy" hidden>Copy response</button></div><span class="local-label">◇ &nbsp;Powered by local Ollama</span></footer></section><span class="sr-only announcement" aria-live="polite"></span>`;
-    this.el<HTMLButtonElement>('.settings').addEventListener('click', actions.settings);
+      <div class="toolbar"><div class="brand">${SPARK}<span>Local Overview</span></div><div class="model-row"><label class="sr-only" for="lo-model">Model</label><select id="lo-model" aria-label="Ollama model"><option value="">Select a local model</option></select><button class="settings refresh" aria-label="Refresh installed models" title="Refresh models">↻</button></div><button class="settings" aria-label="Open Local Overview settings" title="Settings">${GEAR}</button></div>
+      <section class="card" aria-label="Local AI answer"><span class="status sr-only" role="status">Ready to connect</span>
+      <div class="body"><div class="empty"><p class="empty-text">Generate a local answer to this search.</p></div><div class="skeleton" aria-hidden="true" hidden><i></i><i></i><i></i></div><div class="answer" dir="auto"></div><div class="notice" hidden role="status"></div><details class="sources" hidden open><summary>Search context</summary><div class="source-grid"></div></details><details class="stats" hidden><summary>Generation statistics</summary><dl></dl></details></div>
+      <footer class="foot"><div class="actions"><button class="button primary generate">Generate overview</button><button class="button stop" hidden>Stop generating</button><button class="button copy" hidden>Copy response</button></div><span class="local-label">Powered by local Ollama</span></footer><p class="grounding" data-grounded="false"></p></section><span class="sr-only announcement" aria-live="polite"></span>`;
+    this.answer = new AnswerRenderer(this.el('.answer'));
+    this.el<HTMLButtonElement>('.toolbar > .settings').addEventListener('click', actions.settings);
     this.el<HTMLButtonElement>('.generate').addEventListener('click', actions.generate);
     this.el<HTMLButtonElement>('.stop').addEventListener('click', actions.stop);
     this.el<HTMLButtonElement>('.refresh').addEventListener('click', actions.refresh);
@@ -62,8 +64,8 @@ export class OverviewView {
     if (settings.model) this.el<HTMLSelectElement>('select').value = settings.model;
   }
   connection(text: string, online = false): void {
-    this.el('.status').textContent = text;
-    this.el('.connection').dataset.online = String(online);
+    this.el('.status').textContent = text === 'Ollama connected' ? 'Local model ready.' : text;
+    this.host.dataset.online = String(online);
   }
   models(models: Model[], selected: string): void {
     const select = this.el<HTMLSelectElement>('select');
@@ -75,7 +77,7 @@ export class OverviewView {
     select.value = selected || models[0]?.name || '';
   }
   context(sources: Source[], enabled: boolean): void {
-    this.sources = sources;
+    this.answer.setSources(sources);
     const label = this.el('.grounding');
     label.dataset.grounded = String(sources.length > 0);
     label.textContent = sources.length
@@ -104,10 +106,12 @@ export class OverviewView {
   }
   start(): void {
     this.text = '';
-    this.busy = true;
+    this.queuedText = '';
+    cancelAnimationFrame(this.frame);
+    this.frame = 0;
+    this.answer.reset();
     this.host.dataset.busy = 'true';
     this.el('.empty').hidden = true;
-    this.el('.answer').replaceChildren();
     this.el('.notice').hidden = true;
     this.el('.skeleton').hidden = false;
     this.el('.card').dataset.busy = 'true';
@@ -121,47 +125,25 @@ export class OverviewView {
   }
   delta(text: string): void {
     this.text += text;
+    this.queuedText += text;
     if (!this.frame)
       this.frame = requestAnimationFrame(() => {
         this.frame = 0;
-        this.renderAnswer();
+        this.flushAnswer();
       });
   }
-  private renderAnswer(): void {
-    const answer = this.el('.answer');
-    answer.replaceChildren();
-    this.el('.skeleton').hidden = this.text.length > 0 || !this.busy;
-    // Only source IDs supplied by the extension can become links. No Markdown/HTML URLs.
-    const pattern = /\[(\d{1,3})\]/g;
-    let previous = 0;
-    for (const match of this.text.matchAll(pattern)) {
-      answer.append(document.createTextNode(this.text.slice(previous, match.index)));
-      const source = this.sources.find((item) => item.id === Number(match[1]));
-      if (source) {
-        const a = document.createElement('a');
-        a.textContent = match[0];
-        a.href = source.url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.setAttribute('aria-label', `Source ${source.id}: ${source.title}`);
-        answer.append(a);
-      } else answer.append(document.createTextNode(''));
-      previous = match.index! + match[0].length;
-    }
-    answer.append(document.createTextNode(this.text.slice(previous)));
-    if (this.busy && this.text) {
-      const cursor = document.createElement('span');
-      cursor.className = 'cursor';
-      cursor.setAttribute('aria-hidden', 'true');
-      answer.append(cursor);
-    }
+  private flushAnswer(): void {
+    if (this.queuedText) this.answer.append(this.queuedText);
+    this.queuedText = '';
+    this.el('.skeleton').hidden = !!this.el('.answer').textContent?.trim();
   }
   finish(stats?: GenerationStats, showStats = false): void {
-    this.busy = false;
     this.host.dataset.busy = 'false';
     cancelAnimationFrame(this.frame);
     this.frame = 0;
-    this.renderAnswer();
+    this.flushAnswer();
+    this.answer.finish();
+    this.el('.skeleton').hidden = true;
     this.el('.card').dataset.busy = 'false';
     this.el('.card').setAttribute('aria-busy', 'false');
     this.el('.stop').hidden = true;
@@ -209,7 +191,9 @@ export class OverviewView {
   }
   clear(): void {
     this.text = '';
-    this.sources = [];
+    this.queuedText = '';
+    this.answer.reset();
+    this.answer.setSources([]);
     this.finish();
     this.el('.empty').hidden = false;
     this.el('.notice').hidden = true;

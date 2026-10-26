@@ -27,7 +27,7 @@ jobs:
         run: npm run package
       - uses: actions/upload-artifact@v4
         with:
-          name: local-overview-0.1.0
+          name: local-overview
           path: artifacts/*.zip
           if-no-files-found: error
           retention-days: 14

@@ -1,6 +1,6 @@
 # Privacy policy
 
-**Local Overview 0.1.0 · Effective 26 October 2026**
+**Local Overview · Effective 26 October 2026**
 
 Local Overview is an independent browser extension, unaffiliated with Google or Ollama. The extension has no operator-hosted backend, account system, telemetry, analytics, advertising, tracking pixels, API keys, or remote AI integration.
 

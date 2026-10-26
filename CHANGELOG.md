@@ -1,14 +1,15 @@
 # Changelog
 
-## 0.1.1 — Unreleased, local development
+## 0.1.1 — 2026-10-27
 
 - Replaced the bordered answer card with an open layout that blends into Google Search while retaining Local Overview branding.
 - Removed the repeated “Local AI Overview” label and visible connection-status line from the search-page answer area.
 - Added a gentle streaming text reveal and blue emphasis for short important phrases, with reduced-motion support.
 - Revised model instructions to answer the search topic directly rather than narrating the query, source list, or request format.
+- Refreshed all four screenshots from the built extension and expanded rendering, accessibility, and browser coverage.
 - Derived ZIP names and build version checks from project metadata so local packages use the correct version.
 
-This version is prepared locally and has not been pushed or published. The public release remains [v0.1.0](https://github.com/CTR495/local-overview/releases/tag/v0.1.0).
+Validated with 112 unit tests, six Chromium extension tests, and a genuine local Ollama model against a search fixture. See the [release notes](docs/RELEASE-v0.1.1.md) and [validation report](docs/VALIDATION.md).
 
 ## 0.1.0 — 2026-10-26
 

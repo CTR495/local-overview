@@ -4,9 +4,9 @@
 
 Local Overview is an independent Chrome extension that adds a **Local AI Overview** to Google Search using a model installed in [Ollama](https://ollama.com/). The local panel appears alongside Google's original results and AI Overview, which stay available and unchanged.
 
-Version **0.1.1 — local, unreleased** · Manifest V3 · TypeScript · No frontend framework · MIT
+Version **0.1.1** · Manifest V3 · TypeScript · No frontend framework · MIT
 
-This working copy contains the next update and has not been pushed to GitHub or published. The current public release is [v0.1.0](https://github.com/CTR495/local-overview/releases/tag/v0.1.0).
+[Download v0.1.1](https://github.com/CTR495/local-overview/releases/tag/v0.1.1), extract the ZIP, and follow the unpacked installation steps below. Existing users should reload the updated extension and their Google Search tabs.
 
 [Source repository](https://github.com/CTR495/local-overview) · [Release downloads](https://github.com/CTR495/local-overview/releases)
 
@@ -119,7 +119,7 @@ npm run test:browser
 
 Browser tests use representative search fixtures and mocked Ollama responses. The [test guide](docs/TESTING.md) separates these checks from live Google and real-model testing. Never run test scenarios against a personal browser profile with sensitive tabs.
 
-For 0.1.0, a separate browser check also streamed a genuine local Ollama model through the built extension against a search fixture. The maintainer reported that their manual live test worked. The automated live Google attempt encountered a traffic challenge; it did not establish live compatibility. See the [validation report](docs/VALIDATION.md) for the distinct results and their limits.
+The 0.1.1 release passed 112 unit tests and six Chromium extension tests. A separate browser check streamed a genuine local Ollama model through the built extension against a search fixture and confirmed a direct answer to “youtube.” The maintainer also reported successful manual testing of this update. The automated live Google attempt during the initial build encountered a traffic challenge; it did not establish live compatibility. See the [validation report](docs/VALIDATION.md) for the distinct results and their limits.
 
 The build bundles local code with esbuild. There are no runtime npm dependencies, CDN assets, external font requests, or remote executable scripts. Generated files, dependencies, test outputs, and local configuration are excluded from Git.
 

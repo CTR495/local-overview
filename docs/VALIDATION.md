@@ -1,10 +1,10 @@
-# Version 0.1.1 local validation
+# Version 0.1.1 validation
 
-Version **0.1.1 is local and unpublished**. The new work changes the answer layout, streaming reveal and emphasis, direct-answer prompting, and version-aware packaging. It does not change the local-only endpoint policy or Google's native content.
+Version **0.1.1** changes the answer layout, streaming reveal and emphasis, direct-answer prompting, and version-aware packaging. It does not change the local-only endpoint policy or Google's native content.
 
 ## Local revision checks
 
-Validation recorded **26 October 2026**. These results apply to the local 0.1.1 revision; the published 0.1.0 baseline is recorded separately below.
+Implementation validation recorded **26 October 2026**; release preparation dated **27 October 2026**. These results apply to the 0.1.1 revision; the published 0.1.0 baseline is recorded separately below.
 
 | Check                                                                               | Result                                                                                                                                          |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,9 +23,9 @@ This check used an isolated temporary Ollama server configured for the test exte
 
 Three additional prompt-only real-model smoke cases exercised direct-answer behavior and hostile source text. Those checks met their direct-answer and source-handling expectations, but one grounded response omitted the requested inline citation markers. Prompt compliance remains imperfect. The renderer restricts clickable citations to supplied source IDs; it cannot guarantee that the model cites every relevant claim or that an answer is factually supported or current.
 
-### Publication boundary
+### Manual testing and publication
 
-Version 0.1.1 remains only on the local `work/v0.1.1` branch and has not been pushed or released. Public `main` and the published `v0.1.0` tag remain at commit `518b6be`.
+On **27 October 2026**, the maintainer reported that the update worked after several minutes of manual testing and authorized the [v0.1.1 release](https://github.com/CTR495/local-overview/releases/tag/v0.1.1). This is user-reported validation; the automated results above use controlled search fixtures. The existing v0.1.0 release and asset are preserved.
 
 ## Published version 0.1.0 baseline
 
